@@ -1,4 +1,4 @@
-tradingview-ta==0.3.0
+tradingview-ta==3.3.0
 schedule==1.2.1
 requests==2.31.0
 beautifulsoup4==4.12.2
