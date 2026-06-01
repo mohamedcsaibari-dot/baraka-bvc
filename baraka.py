@@ -174,9 +174,11 @@ def send_email(subject, html):
         msg["From"]    = GMAIL_USER
         msg["To"]      = TO_EMAIL
         msg.attach(MIMEText(html, "html"))
-        with smtplib.SMTP_SSL("smtp.gmail.com", 465) as s:
-            s.login(GMAIL_USER, GMAIL_PASSWORD)
-            s.sendmail(GMAIL_USER, TO_EMAIL, msg.as_string())
+        with smtplib.SMTP("smtp.gmail.com", 587) as s:
+        s.ehlo()
+        s.starttls()
+        s.login(GMAIL_USER, GMAIL_PASSWORD)
+        s.sendmail(GMAIL_USER, TO_EMAIL, msg.as_string())
         print(f"[BARAKA] Email: {subject}")
         return True
     except Exception as e:
