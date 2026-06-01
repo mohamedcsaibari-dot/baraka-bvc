@@ -643,7 +643,7 @@ def _analyze_social_rumors(posts, news_cache):
 def get_twitter_signals():
     signals  = []
     accounts = [("federalreserve","FED"),("BankAlMaghrib","BAM"),("ecb","ECB"),("IMFNews","FMI"),("ReutersBiz","Reuters")]
-    nitter   = [https://nitter.poast.org,https://nitter.privacydev.net,https://nitter.1d4.us]
+    nitter = ["https://nitter.poast.org","https://nitter.privacydev.net","https://nitter.1d4.us"]
     for account, label in accounts:
         for n in nitter:
             try:
