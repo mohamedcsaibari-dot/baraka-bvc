@@ -41,7 +41,7 @@ F = {
 }
 
 HEADERS = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"}
-AMMC_URL = https://www.ammc.ma/fr/communiques-presse-emetteurs
+AMMC_URL = "https://www.ammc.ma/fr/communiques-presse-emetteurs"
 VOL_THRESHOLD = 2.5
 URGENCY_LIMIT = 85
 
