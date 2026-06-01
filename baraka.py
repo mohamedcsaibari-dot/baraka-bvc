@@ -24,9 +24,9 @@ try:
 except:
     GROQ_OK = False
 
-GMAIL_USER     = os.environ.get("GMAIL_USER", mohamed.csaibari@gmail.com)
+GMAIL_USER     = os.environ.get("GMAIL_USER", "mohamed.csaibari@gmail.com")
 GMAIL_PASSWORD = os.environ.get("GMAIL_APP_PASSWORD", "")
-TO_EMAIL       = mohamed.csaibari@gmail.com
+TO_EMAIL       = "mohamed.csaibari@gmail.com"
 GROQ_API_KEY   = os.environ.get("GROQ_API_KEY", "")
 
 F = {
@@ -440,7 +440,7 @@ def get_company_google_news(ticker, query):
     articles = []
     try:
         q   = quote(query + " 2026")
-        url = fhttps://news.google.com/rss/search?q={q}&hl=fr&gl=MA&ceid=MA:fr
+        url = f"https://news.google.com/rss/search?q={q}&hl=fr&gl=MA&ceid=MA:fr"
         r   = requests.get(url, headers=HEADERS, timeout=8)
         titles  = re.findall(r"<title><!\[CDATA\[(.*?)\]\]></title>", r.text)
         dates   = re.findall(r"<pubDate>(.*?)</pubDate>", r.text)
@@ -466,7 +466,7 @@ def get_google_news_general(queries):
     for query in queries[:6]:
         try:
             q   = quote(query)
-            url = fhttps://news.google.com/rss/search?q={q}&hl=fr&gl=MA&ceid=MA:fr
+            url = f"https://news.google.com/rss/search?q={q}&hl=fr&gl=MA&ceid=MA:fr"
             r   = requests.get(url, headers=HEADERS, timeout=8)
             titles = re.findall(r"<title>(.*?)</title>", r.text)
             for t in titles[1:4]:
@@ -548,7 +548,7 @@ def _analyze_news_batch(articles_by_ticker, cache):
 def scrape_telegram_channel(channel_name):
     posts = []
     try:
-        url  = fhttps://t.me/s/{channel_name}
+        url  = f"https://t.me/s/{channel_name}"
         r    = requests.get(url, headers=HEADERS, timeout=10)
         if r.status_code != 200:
             return []
@@ -643,7 +643,7 @@ def _analyze_social_rumors(posts, news_cache):
 def get_twitter_signals():
     signals  = []
     accounts = [("federalreserve","FED"),("BankAlMaghrib","BAM"),("ecb","ECB"),("IMFNews","FMI"),("ReutersBiz","Reuters")]
-    nitter = ["https://nitter.poast.org","https://nitter.privacydev.net","https://nitter.1d4.us"]
+    nitter   = ["https://nitter.poast.org","https://nitter.privacydev.net","https://nitter.1d4.us"]
     for account, label in accounts:
         for n in nitter:
             try:
@@ -765,7 +765,7 @@ def get_global_macro():
 def get_rates():
     rates = {"fed": 5.25, "ecb": 3.5, "bam": 3.0, "bam_news": []}
     try:
-        r = requests.get(https://fred.stlouisfed.org/graph/fredgraph.csv?id=FEDFUNDS, headers=HEADERS, timeout=10)
+        r = requests.get("https://fred.stlouisfed.org/graph/fredgraph.csv?id=FEDFUNDS", headers=HEADERS, timeout=10)
         lines = r.text.strip().split("\n")
         if len(lines) > 1:
             v = float(lines[-1].split(",")[1])
@@ -774,7 +774,7 @@ def get_rates():
     except:
         pass
     try:
-        r    = requests.get(https://www.bkam.ma/Politique-monetaire, headers=HEADERS, timeout=12)
+        r    = requests.get("https://www.bkam.ma/Politique-monetaire", headers=HEADERS, timeout=12)
         soup = BeautifulSoup(r.text, "html.parser")
         text = r.text.lower()
         for m in re.findall(r'(\d+[.,]\d+)\s*%', text):
@@ -809,7 +809,7 @@ def get_masi():
 
 def _scrape_boursenews():
     try:
-        r    = requests.get(https://www.boursenews.ma/, headers=HEADERS, timeout=10)
+        r    = requests.get("https://www.boursenews.ma/", headers=HEADERS, timeout=10)
         soup = BeautifulSoup(r.text, "html.parser")
         news = [item.get_text(strip=True)[:160] for item in soup.select("article,h2 a,h3 a")[:10] if len(item.get_text(strip=True)) > 20]
         return list(dict.fromkeys(news))[:5]
@@ -818,7 +818,7 @@ def _scrape_boursenews():
 
 def _scrape_ammc_news():
     try:
-        r    = requests.get(https://www.ammc.ma/fr/actualites, headers=HEADERS, timeout=10)
+        r    = requests.get("https://www.ammc.ma/fr/actualites", headers=HEADERS, timeout=10)
         soup = BeautifulSoup(r.text, "html.parser")
         items = [i.get_text(strip=True)[:160] for i in soup.select(".views-row,article,h3 a,h2 a")[:6] if len(i.get_text(strip=True)) > 20]
         return list(dict.fromkeys(items))[:4]
@@ -827,7 +827,7 @@ def _scrape_ammc_news():
 
 def _scrape_oc():
     try:
-        r    = requests.get(https://www.oc.gov.ma/fr/publications, headers=HEADERS, timeout=10)
+        r    = requests.get("https://www.oc.gov.ma/fr/publications", headers=HEADERS, timeout=10)
         soup = BeautifulSoup(r.text, "html.parser")
         items = [i.get_text(strip=True)[:160] for i in soup.select("article,.views-row,h3 a,h2 a")[:5] if len(i.get_text(strip=True)) > 20]
         return list(dict.fromkeys(items))[:3]
@@ -1871,7 +1871,7 @@ def get_all_news_fast():
     texts.extend(_scrape_boursenews())
     texts.extend(_scrape_ammc_news())
     try:
-        r    = requests.get(https://www.bkam.ma/Politique-monetaire, headers=HEADERS, timeout=8)
+        r    = requests.get("https://www.bkam.ma/Politique-monetaire", headers=HEADERS, timeout=8)
         soup = BeautifulSoup(r.text, "html.parser")
         for el in soup.select("p,h2,h3")[:10]:
             t = el.get_text(strip=True)
