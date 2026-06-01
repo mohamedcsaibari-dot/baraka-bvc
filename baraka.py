@@ -285,7 +285,7 @@ def scrape_ammc_publications():
                 if "2026" not in parent_text and "2026" not in text and "2026" not in href:
                     continue
                 if href.endswith(".pdf") or "pdf" in href.lower() or "telecharger" in href.lower():
-                    full_url = href if href.startswith("http") else https://www.ammc.ma + href
+                    full_url = href if href.startswith("http") else "https://www.ammc.ma" + href
                     company  = _identify_company(text + " " + parent_text)
                     publications.append({
                         "url":     full_url,
