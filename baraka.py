@@ -168,6 +168,32 @@ def groq_json(prompt, max_tokens=1200):
     return {}
 
 def send_email(subject, html):
+    # Methode 1 : Resend API (HTTP - fonctionne sur Railway)
+    resend_key = os.environ.get("RESEND_API_KEY", "")
+    if resend_key:
+        try:
+            r = requests.post(
+                "https://api.resend.com/emails",
+                headers={
+                    "Authorization": f"Bearer {resend_key}",
+                    "Content-Type": "application/json",
+                },
+                json={
+                    "from":    "Baraka BVC <onboarding@resend.dev>",
+                    "to":      [TO_EMAIL],
+                    "subject": subject,
+                    "html":    html,
+                },
+                timeout=15,
+            )
+            if r.status_code in [200, 201]:
+                print(f"[BARAKA] Email Resend OK: {subject}")
+                return True
+            else:
+                print(f"[BARAKA] Email Resend error: {r.status_code} {r.text[:100]}")
+        except Exception as e:
+            print(f"[BARAKA] Email Resend exception: {e}")
+    # Methode 2 : SMTP Gmail fallback
     try:
         msg = MIMEMultipart("alternative")
         msg["Subject"] = subject
@@ -179,10 +205,10 @@ def send_email(subject, html):
             s.starttls()
             s.login(GMAIL_USER, GMAIL_PASSWORD)
             s.sendmail(GMAIL_USER, TO_EMAIL, msg.as_string())
-        print(f"[BARAKA] Email: {subject}")
+        print(f"[BARAKA] Email SMTP OK: {subject}")
         return True
     except Exception as e:
-        print(f"[BARAKA] Email error: {e}")
+        print(f"[BARAKA] Email SMTP error: {e}")
         return False
 
 # ═══════════════════════════════════════════════════════════
@@ -2473,6 +2499,17 @@ def run_scheduler():
     # Surveillance volumes heures marche
     schedule.every(15).minutes.do(monitor_volumes)
 
+    # Email de test au demarrage
+    print("[BARAKA] Envoi email de test au demarrage...")
+    send_email(
+        "BARAKA v5 - DEMARRAGE OK - Test email",
+        "<div style='background:#0A0D14;color:#E8E4D6;font-family:Courier New;padding:30px;'>"
+        "<h1 style='color:#C9A84C;letter-spacing:4px'>BARAKA v5.0</h1>"
+        "<p style='color:#00C87A;font-size:16px'>Systeme demarre avec succes!</p>"
+        "<p style='color:#9CA3AF'>Baraka est actif 24h/24 et surveille la BVC.</p>"
+        "<p style='color:#9CA3AF'>Premier Signal Matin: demain 10h00</p>"
+        "</div>"
+    )
     print("[BARAKA] Actif 24h/24 - Smart Filter active - Baraka anticipe le marche...")
     while True:
         schedule.run_pending()
