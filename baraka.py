@@ -741,11 +741,33 @@ def get_twitter_signals():
 # MARKET DATA
 # ═══════════════════════════════════════════════════════════
 
+TV_CACHE_FILE = "tv_cache.json"
+
+def _load_tv_cache():
+    if os.path.exists(TV_CACHE_FILE):
+        try:
+            with open(TV_CACHE_FILE, "r") as f:
+                return json.load(f)
+        except: pass
+    return {}
+
+def _save_tv_cache(analyses):
+    try:
+        # Garder seulement les donnees non-nulles
+        cache = {k: v for k, v in analyses.items() if v and v.get("close", 0) > 0}
+        with open(TV_CACHE_FILE, "w") as f:
+            json.dump(cache, f)
+    except: pass
+
 def get_tv_analysis(ticker):
     try:
-        h = TA_Handler(symbol=ticker, screener="morocco", exchange="CSE", interval=Interval.INTERVAL_15_MINUTES)
+        # Essayer d'abord avec INTERVAL_1_DAY si le marche est ferme
+        now = datetime.datetime.now()
+        is_market_hours = (9 <= now.hour < 16) and (now.weekday() < 5)
+        interval = Interval.INTERVAL_15_MINUTES if is_market_hours else Interval.INTERVAL_1_DAY
+        h = TA_Handler(symbol=ticker, screener="morocco", exchange="CSE", interval=interval)
         a = h.get_analysis()
-        return {
+        result = {
             "ticker":         ticker,
             "close":          a.indicators.get("close", 0),
             "volume":         a.indicators.get("volume", 0),
@@ -771,6 +793,7 @@ def get_tv_analysis(ticker):
             "buy_signals":    a.summary.get("BUY", 0),
             "sell_signals":   a.summary.get("SELL", 0),
         }
+        return result if result["close"] > 0 else None
     except Exception as e:
         print(f"[TV] {ticker}: {e}")
         return None
@@ -1234,7 +1257,19 @@ def run_full_analysis():
         if a:
             analyses[ticker] = a
         time.sleep(0.35)
-    print(f"[BARAKA] {len(analyses)}/{len(BVC)} OK")
+    ok = len(analyses)
+    print(f"[BARAKA] {ok}/{len(BVC)} OK")
+    # Si moins de 10 titres => utiliser le cache
+    if ok < 10:
+        print("[BARAKA] TV insuffisant - chargement cache TV")
+        cached = _load_tv_cache()
+        for ticker, data in cached.items():
+            if ticker not in analyses:
+                analyses[ticker] = data
+        print(f"[BARAKA] Apres cache: {len(analyses)} titres")
+    elif ok >= 20:
+        # Sauvegarder si bonne session
+        _save_tv_cache(analyses)
     return analyses
 
 def run_vp_for_top(analyses):
@@ -2029,23 +2064,30 @@ def event_check():
                     urgent.append({"type":event_type,"detail":text[:200],"score":score,"direction":"varies"})
                     break
 
-    # Smart money
-    try:
-        analyses = run_full_analysis()
-        sm, sectors_coordinated = detect_smart_money(analyses)
-        if sm and (len(sm) >= 2 or (sm and sm[0]["vol_ratio"] >= 6)):
-            tickers_sm = ", ".join([s["ticker"] for s in sm[:4]])
-            sectors_sm = ", ".join(sectors_coordinated) if sectors_coordinated else "multiple"
-            urgent.append({
-                "type":        "smart_money",
-                "detail":      f"SMART MONEY sur {tickers_sm} - Volumes x{sm[0]['vol_ratio']} - Secteurs: {sectors_sm}",
-                "score":       92,
-                "direction":   "UP",
-                "smart_money": sm[:4],
-            })
-    except Exception as e:
-        print(f"[SM DETECT] {e}")
-        analyses = {}
+    # Smart money - seulement pendant les heures de marche
+    analyses = {}
+    now_h = datetime.datetime.now()
+    is_market = (9 <= now_h.hour < 16) and (now_h.weekday() < 5)
+    if is_market:
+        try:
+            analyses = run_full_analysis()
+            sm, sectors_coordinated = detect_smart_money(analyses)
+            if sm and (len(sm) >= 2 or (sm and sm[0]["vol_ratio"] >= 6)):
+                tickers_sm = ", ".join([s["ticker"] for s in sm[:4]])
+                sectors_sm = ", ".join(sectors_coordinated) if sectors_coordinated else "multiple"
+                urgent.append({
+                    "type":        "smart_money",
+                    "detail":      f"SMART MONEY sur {tickers_sm} - Volumes x{sm[0]['vol_ratio']} - Secteurs: {sectors_sm}",
+                    "score":       92,
+                    "direction":   "UP",
+                    "smart_money": sm[:4],
+                })
+        except Exception as e:
+            print(f"[SM DETECT] {e}")
+            analyses = {}
+    else:
+        # En dehors des heures - utiliser le cache TV
+        analyses = _load_tv_cache()
 
     if urgent:
         rates = get_rates()
