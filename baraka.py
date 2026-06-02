@@ -143,8 +143,16 @@ def groq_call(prompt, max_tokens=400, temp=0.25):
     if not GROQ_OK or not GROQ_API_KEY:
         return ""
     try:
-        client = Groq(api_key=GROQ_API_KEY)
-        resp   = client.chat.completions.create(
+        # Fix compatibilite httpx/groq - eviter le parametre proxies
+        try:
+            client = Groq(api_key=GROQ_API_KEY)
+        except TypeError:
+            # Version incompatible - essayer sans kwargs
+            import groq as groq_module
+            client = groq_module.Groq.__new__(groq_module.Groq)
+            client.api_key = GROQ_API_KEY
+            return ""
+        resp = client.chat.completions.create(
             model="llama3-70b-8192",
             messages=[{"role":"user","content":prompt}],
             max_tokens=max_tokens,
@@ -167,7 +175,45 @@ def groq_json(prompt, max_tokens=1200):
         pass
     return {}
 
+EMAIL_SENT_LOG = "email_sent_log.json"
+
+def _check_email_duplicate(subject):
+    """Retourne True si cet email a deja ete envoye dans les 20 dernieres minutes"""
+    try:
+        if not os.path.exists(EMAIL_SENT_LOG):
+            return False
+        with open(EMAIL_SENT_LOG, "r") as f:
+            log = json.load(f)
+        now = datetime.datetime.now()
+        for entry in log.get("sent", []):
+            if entry.get("subject") == subject:
+                sent_at = datetime.datetime.strptime(entry["time"], "%Y-%m-%d %H:%M:%S")
+                if (now - sent_at).total_seconds() < 1200:  # 20 minutes
+                    return True
+    except: pass
+    return False
+
+def _log_email_sent(subject):
+    try:
+        log = {"sent": []}
+        if os.path.exists(EMAIL_SENT_LOG):
+            with open(EMAIL_SENT_LOG, "r") as f:
+                log = json.load(f)
+        now = datetime.datetime.now()
+        # Garder seulement les 30 derniers
+        log["sent"] = [e for e in log.get("sent", []) if
+            (now - datetime.datetime.strptime(e["time"], "%Y-%m-%d %H:%M:%S")).total_seconds() < 7200
+        ][-30:]
+        log["sent"].append({"subject": subject, "time": now.strftime("%Y-%m-%d %H:%M:%S")})
+        with open(EMAIL_SENT_LOG, "w") as f:
+            json.dump(log, f)
+    except: pass
+
 def send_email(subject, html):
+    # Anti-doublon: eviter d'envoyer le meme email 2 fois en 20 min
+    if _check_email_duplicate(subject):
+        print(f"[BARAKA] Email doublon evite: {subject[:50]}")
+        return True
     # Methode 1 : Resend API (HTTP - fonctionne sur Railway)
     resend_key = os.environ.get("RESEND_API_KEY", "")
     if resend_key:
@@ -188,6 +234,7 @@ def send_email(subject, html):
             )
             if r.status_code in [200, 201]:
                 print(f"[BARAKA] Email Resend OK: {subject}")
+                _log_email_sent(subject)
                 return True
             else:
                 print(f"[BARAKA] Email Resend error: {r.status_code} {r.text[:100]}")
@@ -206,6 +253,7 @@ def send_email(subject, html):
             s.login(GMAIL_USER, GMAIL_PASSWORD)
             s.sendmail(GMAIL_USER, TO_EMAIL, msg.as_string())
         print(f"[BARAKA] Email SMTP OK: {subject}")
+        _log_email_sent(subject)
         return True
     except Exception as e:
         print(f"[BARAKA] Email SMTP error: {e}")
@@ -727,6 +775,23 @@ def get_tv_analysis(ticker):
         print(f"[TV] {ticker}: {e}")
         return None
 
+MACRO_CACHE = "macro_cache.json"
+
+def _load_macro_cache():
+    if os.path.exists(MACRO_CACHE):
+        try:
+            with open(MACRO_CACHE, "r") as f:
+                return json.load(f)
+        except: pass
+    return {}
+
+def _save_macro_cache(macro):
+    try:
+        cache = {k: v for k, v in macro.items() if k != "_d"}
+        with open(MACRO_CACHE, "w") as f:
+            json.dump(cache, f)
+    except: pass
+
 def get_global_macro():
     macro   = {}
     symbols = {
@@ -736,24 +801,35 @@ def get_global_macro():
         "natgas":"NG=F","eur_usd":"EURUSD=X","usd_mad":"USDMAD=X","eur_mad":"EURMAD=X",
         "dxy":"DX-Y.NYB",
     }
-    try:
-        data = yf.download(list(symbols.values()), period="2d", interval="1d", progress=False, auto_adjust=True)
-        for name, sym in symbols.items():
-            try:
-                closes = data["Close"][sym].dropna()
-                if len(closes) >= 2:
-                    prev = float(closes.iloc[-2])
-                    curr = float(closes.iloc[-1])
-                    chg  = (curr - prev) / prev * 100 if prev != 0 else 0
-                    macro[name] = {"price": round(curr, 4), "change": round(chg, 3)}
-                else:
-                    macro[name] = {"price": 0, "change": 0}
-            except:
+    # Essayer yfinance symbole par symbole avec gestion d'erreur
+    for name, sym in symbols.items():
+        try:
+            ticker = yf.Ticker(sym)
+            hist   = ticker.history(period="2d", interval="1d")
+            if len(hist) >= 2:
+                prev = float(hist["Close"].iloc[-2])
+                curr = float(hist["Close"].iloc[-1])
+                chg  = (curr - prev) / prev * 100 if prev != 0 else 0
+                macro[name] = {"price": round(curr, 4), "change": round(chg, 3)}
+            elif len(hist) == 1:
+                curr = float(hist["Close"].iloc[-1])
+                macro[name] = {"price": round(curr, 4), "change": 0}
+            else:
                 macro[name] = {"price": 0, "change": 0}
-    except Exception as e:
-        print(f"[MACRO] {e}")
-        for name in symbols:
+        except:
             macro[name] = {"price": 0, "change": 0}
+
+    # Si trop de zeros, charger le cache
+    non_zero = sum(1 for v in macro.values() if v.get("price", 0) != 0)
+    if non_zero < 5:
+        print("[MACRO] yfinance indisponible - chargement cache")
+        cached = _load_macro_cache()
+        if cached:
+            for k, v in cached.items():
+                if macro.get(k, {}).get("price", 0) == 0:
+                    macro[k] = v
+    else:
+        _save_macro_cache(macro)
 
     vix    = macro.get("vix",   {}).get("price",  20)
     us10y  = macro.get("us10y", {}).get("price",   4.0)
@@ -1877,7 +1953,10 @@ def run_alert(subject_type):
         "midi":    "BARAKA v5 - POINT MIDI - Garder / Vendre / Switcher",
         "cloture": "BARAKA v5 - CLOTURE BVC - Decision + Hold Semaine",
     }
-    send_email(titles[subject_type], html)
+    try:
+        send_email(titles[subject_type], html)
+    except Exception as e:
+        print(f"[BARAKA] run_alert send error: {e}")
 
 
 # ═══════════════════════════════════════════════════════════
@@ -2133,6 +2212,8 @@ def night_analysis():
         "Style trader. Francais. Direct."
     )
     synthesis = groq_call(prompt, max_tokens=400, temp=0.2)
+    if not synthesis:
+        synthesis = "Analyse Groq indisponible. Consultez les donnees macro ci-dessus pour votre strategie de demain."
 
     with open(F["night"], "w") as f:
         json.dump({
@@ -2328,31 +2409,42 @@ def post_cloture_learning():
         '"patterns_detectes":["..."],"score_precision_jour":75,"recommandations_demain":"..."}'
     )
     result = groq_json(prompt, max_tokens=1200)
-    if result:
-        learnings["lessons"].append({
-            "date":      str(datetime.date.today()),
-            "analyse":   result.get("analyse_du_jour", ""),
-            "lecons":    result.get("lecons_apprises", []),
-            "patterns":  result.get("patterns_detectes", []),
-            "precision": result.get("score_precision_jour", 0),
-            "demain":    result.get("recommandations_demain", ""),
-        })
-        if len(learnings["lessons"]) > 60:
-            learnings["lessons"] = learnings["lessons"][-60:]
-        for k, v in result.get("nouveaux_poids", {}).items():
-            if k in learnings["indicator_weights"]:
-                learnings["indicator_weights"][k] = round(learnings["indicator_weights"][k] * 0.7 + v * 0.3, 3)
-        learnings["secteurs_favorables"] = result.get("secteurs_favorables", [])
-        learnings["secteurs_eviter"]     = result.get("secteurs_eviter", [])
-        learnings["total_analyzed"]      = learnings.get("total_analyzed", 0) + 1
-        hist = learnings.get("accuracy_history", [])
-        hist.append({"date": str(datetime.date.today()), "score": result.get("score_precision_jour", 0)})
-        learnings["accuracy_history"] = hist[-30:]
-        learnings["accuracy_rate"]    = round(sum(h["score"] for h in hist) / len(hist), 1)
-        learnings["last_updated"]     = str(datetime.datetime.now())
-        save_learnings(learnings)
-        _send_learning_email(result, learnings)
-        print(f"[BARAKA] Learning OK - Precision: {result.get('score_precision_jour',0)}%")
+    # Toujours envoyer l'email, meme si Groq echoue
+    if not result:
+        result = {
+            "analyse_du_jour": "Analyse Groq indisponible - donnees collectees",
+            "lecons_apprises": ["Session enregistree", "Donnees marche sauvegardees"],
+            "nouveaux_poids": learnings.get("indicator_weights", {}),
+            "secteurs_favorables": learnings.get("secteurs_favorables", []),
+            "secteurs_eviter": learnings.get("secteurs_eviter", []),
+            "patterns_detectes": [],
+            "score_precision_jour": 50,
+            "recommandations_demain": "Analyser les conditions d'ouverture demain matin",
+        }
+    learnings["lessons"].append({
+        "date":      str(datetime.date.today()),
+        "analyse":   result.get("analyse_du_jour", ""),
+        "lecons":    result.get("lecons_apprises", []),
+        "patterns":  result.get("patterns_detectes", []),
+        "precision": result.get("score_precision_jour", 0),
+        "demain":    result.get("recommandations_demain", ""),
+    })
+    if len(learnings["lessons"]) > 60:
+        learnings["lessons"] = learnings["lessons"][-60:]
+    for k, v in result.get("nouveaux_poids", {}).items():
+        if k in learnings["indicator_weights"]:
+            learnings["indicator_weights"][k] = round(learnings["indicator_weights"][k] * 0.7 + v * 0.3, 3)
+    learnings["secteurs_favorables"] = result.get("secteurs_favorables", [])
+    learnings["secteurs_eviter"]     = result.get("secteurs_eviter", [])
+    learnings["total_analyzed"]      = learnings.get("total_analyzed", 0) + 1
+    hist = learnings.get("accuracy_history", [])
+    hist.append({"date": str(datetime.date.today()), "score": result.get("score_precision_jour", 0)})
+    learnings["accuracy_history"] = hist[-30:]
+    learnings["accuracy_rate"]    = round(sum(h["score"] for h in hist) / len(hist), 1)
+    learnings["last_updated"]     = str(datetime.datetime.now())
+    save_learnings(learnings)
+    _send_learning_email(result, learnings)
+    print(f"[BARAKA] Learning OK - Precision: {result.get('score_precision_jour',0)}%")
 
 def _send_learning_email(result, learnings):
     acc   = learnings.get("accuracy_rate", 0)
@@ -2499,17 +2591,20 @@ def run_scheduler():
     # Surveillance volumes heures marche
     schedule.every(15).minutes.do(monitor_volumes)
 
-    # Email de test au demarrage
-    print("[BARAKA] Envoi email de test au demarrage...")
-    send_email(
-        "BARAKA v5 - DEMARRAGE OK - Test email",
-        "<div style='background:#0A0D14;color:#E8E4D6;font-family:Courier New;padding:30px;'>"
-        "<h1 style='color:#C9A84C;letter-spacing:4px'>BARAKA v5.0</h1>"
-        "<p style='color:#00C87A;font-size:16px'>Systeme demarre avec succes!</p>"
-        "<p style='color:#9CA3AF'>Baraka est actif 24h/24 et surveille la BVC.</p>"
-        "<p style='color:#9CA3AF'>Premier Signal Matin: demain 10h00</p>"
-        "</div>"
-    )
+    # Email de demarrage - une seule fois (evite les doublons au restart)
+    startup_flag = "baraka_started.flag"
+    if not os.path.exists(startup_flag):
+        open(startup_flag, "w").write(str(datetime.datetime.now()))
+        send_email(
+            "BARAKA v5 - DEMARRAGE OK",
+            "<div style='background:#0A0D14;color:#E8E4D6;font-family:Courier New;padding:30px;'>"
+            "<h1 style='color:#C9A84C;letter-spacing:4px'>BARAKA v5.0</h1>"
+            "<p style='color:#00C87A;font-size:16px'>Systeme demarre avec succes!</p>"
+            "<p style='color:#9CA3AF'>Baraka est actif 24h/24 et surveille la BVC.</p>"
+            "<p style='color:#9CA3AF'>Prochain email: Signal Matin 10h00</p>"
+            "</div>"
+        )
+        print("[BARAKA] Email demarrage envoye")
     print("[BARAKA] Actif 24h/24 - Smart Filter active - Baraka anticipe le marche...")
     while True:
         schedule.run_pending()
