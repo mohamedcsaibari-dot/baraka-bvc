@@ -815,44 +815,95 @@ def _save_macro_cache(macro):
             json.dump(cache, f)
     except: pass
 
-def get_global_macro():
-    macro   = {}
-    symbols = {
-        "vix":"^VIX","sp500":"^GSPC","nasdaq":"^IXIC","stoxx50":"^STOXX50E",
-        "dax":"^GDAXI","cac40":"^FCHI","us10y":"^TNX","us2y":"^IRX","us30y":"^TYX",
-        "gold":"GC=F","brent":"BZ=F","oil_wti":"CL=F","silver":"SI=F","copper":"HG=F",
-        "natgas":"NG=F","eur_usd":"EURUSD=X","usd_mad":"USDMAD=X","eur_mad":"EURMAD=X",
-        "dxy":"DX-Y.NYB",
-    }
-    # Essayer yfinance symbole par symbole avec gestion d'erreur
-    for name, sym in symbols.items():
-        try:
-            ticker = yf.Ticker(sym)
-            hist   = ticker.history(period="2d", interval="1d")
-            if len(hist) >= 2:
-                prev = float(hist["Close"].iloc[-2])
-                curr = float(hist["Close"].iloc[-1])
-                chg  = (curr - prev) / prev * 100 if prev != 0 else 0
-                macro[name] = {"price": round(curr, 4), "change": round(chg, 3)}
-            elif len(hist) == 1:
-                curr = float(hist["Close"].iloc[-1])
-                macro[name] = {"price": round(curr, 4), "change": 0}
-            else:
-                macro[name] = {"price": 0, "change": 0}
-        except:
-            macro[name] = {"price": 0, "change": 0}
+def _get_stooq(symbol):
+    """Recupere prix depuis stooq.com - alternative gratuite a yfinance"""
+    try:
+        url = f"https://stooq.com/q/d/l/?s={symbol}&i=d"
+        r   = requests.get(url, headers=HEADERS, timeout=10)
+        lines = r.text.strip().splitlines()
+        if len(lines) >= 3:
+            last  = lines[-1].split(",")
+            prev  = lines[-2].split(",")
+            curr  = float(last[4])   # Close
+            prv   = float(prev[4])
+            chg   = (curr - prv) / prv * 100 if prv else 0
+            return {"price": round(curr, 4), "change": round(chg, 3)}
+    except: pass
+    return None
 
-    # Si trop de zeros, charger le cache
-    non_zero = sum(1 for v in macro.values() if v.get("price", 0) != 0)
-    if non_zero < 5:
-        print("[MACRO] yfinance indisponible - chargement cache")
+def _get_frankfurter(base="USD", target="MAD"):
+    """Taux de change depuis frankfurter.app - 100% gratuit"""
+    try:
+        r = requests.get(f"https://api.frankfurter.app/latest?from={base}&to={target}", headers=HEADERS, timeout=8)
+        data = r.json()
+        rate = data["rates"].get(target, 0)
+        return {"price": round(rate, 4), "change": 0}
+    except: pass
+    return None
+
+def get_global_macro():
+    macro = {}
+    # Donnees Stooq (fonctionne sur Railway - pas de blocage)
+    stooq_map = {
+        "sp500":   "^spx",
+        "nasdaq":  "^ndx",
+        "dax":     "^dax",
+        "cac40":   "^cac",
+        "gold":    "xauusd",
+        "silver":  "xagusd",
+        "copper":  "hgusx",
+        "brent":   "brent.f",
+        "oil_wti": "cl.f",
+        "natgas":  "ng.f",
+        "us10y":   "10ust.b",
+        "us2y":    "2ust.b",
+        "dxy":     "dxy.f",
+        "eur_usd": "eurusd",
+    }
+    for name, sym in stooq_map.items():
+        result = _get_stooq(sym)
+        macro[name] = result if result else {"price": 0, "change": 0}
+        time.sleep(0.3)
+
+    # Taux de change MAD via Frankfurter
+    usd_mad = _get_frankfurter("USD", "MAD")
+    eur_mad = _get_frankfurter("EUR", "MAD")
+    macro["usd_mad"] = usd_mad if usd_mad else {"price": 10.0, "change": 0}
+    macro["eur_mad"] = eur_mad if eur_mad else {"price": 10.9, "change": 0}
+
+    # VIX via CBOE
+    try:
+        r = requests.get("https://query1.finance.yahoo.com/v8/finance/chart/%5EVIX?interval=1d&range=2d",
+                         headers={**HEADERS, "User-Agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 14_0 like Mac OS X)"}, timeout=10)
+        data = r.json()
+        closes = data["chart"]["result"][0]["indicators"]["quote"][0]["close"]
+        closes = [c for c in closes if c is not None]
+        if len(closes) >= 2:
+            macro["vix"] = {"price": round(closes[-1], 2), "change": round((closes[-1]-closes[-2])/closes[-2]*100, 3)}
+        elif len(closes) == 1:
+            macro["vix"] = {"price": round(closes[-1], 2), "change": 0}
+        else:
+            macro["vix"] = {"price": 20.0, "change": 0}
+    except:
+        macro["vix"] = {"price": 20.0, "change": 0}
+
+    # Fallbacks manquants
+    for k in ["stoxx50", "us30y"]:
+        if k not in macro:
+            macro[k] = {"price": 0, "change": 0}
+
+    # Verifier qualite des donnees
+    non_zero = sum(1 for v in macro.values() if isinstance(v, dict) and v.get("price", 0) != 0)
+    if non_zero >= 5:
+        _save_macro_cache(macro)
+        print(f"[MACRO] {non_zero} indicateurs OK (Stooq+Frankfurter)")
+    else:
+        print("[MACRO] Sources alternatives indisponibles - chargement cache")
         cached = _load_macro_cache()
         if cached:
             for k, v in cached.items():
                 if macro.get(k, {}).get("price", 0) == 0:
                     macro[k] = v
-    else:
-        _save_macro_cache(macro)
 
     vix    = macro.get("vix",   {}).get("price",  20)
     us10y  = macro.get("us10y", {}).get("price",   4.0)
