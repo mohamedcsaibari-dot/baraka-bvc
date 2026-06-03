@@ -1834,6 +1834,24 @@ def build_pending_section(pending_items):
 # ═══════════════════════════════════════════════════════════
 
 def run_alert(subject_type):
+    try:
+        _run_alert_safe(subject_type)
+    except Exception as e:
+        print(f"[BARAKA] run_alert {subject_type} error: {e}")
+        titles = {
+            "matin":   "BARAKA v5 - SIGNAL MATIN - Wall Street Level BVC",
+            "midi":    "BARAKA v5 - POINT MIDI - Garder / Vendre / Switcher",
+            "cloture": "BARAKA v5 - CLOTURE BVC - Decision + Hold Semaine",
+        }
+        try:
+            send_email(titles.get(subject_type, f"BARAKA - {subject_type.upper()}"),
+                f"<div style='background:#0A0D14;color:#E8E4D6;padding:20px;font-family:monospace'>"
+                f"<h2 style='color:#C9A84C'>BARAKA - {subject_type.upper()} {datetime.datetime.now().strftime('%d/%m/%Y %H:%M')}</h2>"
+                f"<p style='color:#FF4560'>Erreur technique: {str(e)[:200]}</p>"
+                f"<p style='color:#9CA3AF'>Baraka continuera a surveiller. Prochaine analyse dans quelques heures.</p></div>")
+        except: pass
+
+def _run_alert_safe(subject_type):
     print(f"\n[BARAKA] === {subject_type.upper()} ===")
     learnings    = load_learnings()
     analyses     = run_full_analysis()
@@ -2393,6 +2411,19 @@ def _send_urgent_alert(urgent_events, analyses, macro, masi, rates):
 # ═══════════════════════════════════════════════════════════
 
 def night_analysis():
+    try:
+        _night_analysis_safe()
+    except Exception as e:
+        print(f"[BARAKA] night_analysis error: {e}")
+        try:
+            send_email("BARAKA - ANALYSE NOCTURNE - These pour demain",
+                f"<div style='background:#0A0D14;color:#E8E4D6;padding:20px;font-family:monospace'>"
+                f"<h2 style='color:#C9A84C'>BARAKA - ANALYSE NOCTURNE {datetime.datetime.now().strftime('%d/%m/%Y %H:%M')}</h2>"
+                f"<p style='color:#FF4560'>Erreur technique: {str(e)[:200]}</p>"
+                f"<p style='color:#9CA3AF'>Baraka reprend demain matin 08h30</p></div>")
+        except: pass
+
+def _night_analysis_safe():
     if datetime.datetime.now().weekday() >= 5:
         return
     print("[BARAKA] === ANALYSE NUIT 21h ===")
@@ -2492,6 +2523,19 @@ def night_analysis():
 
 
 def pre_market_brief():
+    try:
+        _pre_market_brief_safe()
+    except Exception as e:
+        print(f"[BARAKA] pre_market error: {e}")
+        try:
+            send_email("BARAKA - BRIEF PRE-MARCHE 8h30 - Strategie ouverture",
+                f"<div style='background:#0A0D14;color:#E8E4D6;padding:20px;font-family:monospace'>"
+                f"<h2 style='color:#C9A84C'>BARAKA - PRE-MARCHE {datetime.datetime.now().strftime('%d/%m/%Y %H:%M')}</h2>"
+                f"<p style='color:#00C87A'>BVC ouvre dans 1h - Baraka analyse en cours</p>"
+                f"<p style='color:#FF4560'>Erreur: {str(e)[:100]}</p></div>")
+        except: pass
+
+def _pre_market_brief_safe():
     if datetime.datetime.now().weekday() >= 5:
         return
     print("[BARAKA] === BRIEF PRE-MARCHE 8h30 ===")
@@ -2590,6 +2634,21 @@ def pre_market_brief():
 # ═══════════════════════════════════════════════════════════
 
 def post_cloture_learning():
+    try:
+        _post_cloture_safe()
+    except Exception as e:
+        print(f"[BARAKA] post_cloture error: {e}")
+        try:
+            learnings = load_learnings()
+            total     = learnings.get("total_analyzed", 0) + 1
+            send_email(f"BARAKA v5 - POST-CLOTURE - Learning #{total}",
+                f"<div style='background:#0A0D14;color:#E8E4D6;padding:20px;font-family:monospace'>"
+                f"<h2 style='color:#C9A84C'>BARAKA - POST-CLOTURE {datetime.datetime.now().strftime('%d/%m/%Y %H:%M')}</h2>"
+                f"<p style='color:#FF4560'>Erreur: {str(e)[:100]}</p>"
+                f"<p style='color:#9CA3AF'>Analyse reprise demain.</p></div>")
+        except: pass
+
+def _post_cloture_safe():
     if datetime.datetime.now().weekday() >= 5:
         return
     print("[BARAKA] === POST-CLOTURE LEARNING ===")
