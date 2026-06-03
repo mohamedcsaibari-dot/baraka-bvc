@@ -12,6 +12,30 @@ except:
     pass
 
 import schedule, time, datetime, json, requests, smtplib, re, hashlib, io
+import threading
+
+# Flask pour keep-alive Render.com (ne sert a rien sur Railway)
+try:
+    from flask import Flask
+    _app = Flask(__name__)
+
+    @_app.route("/")
+    def health():
+        return "BARAKA v5 - ACTIVE", 200
+
+    @_app.route("/ping")
+    def ping():
+        return f"OK - {datetime.datetime.now().strftime('%H:%M:%S')}", 200
+
+    def _run_flask():
+        port = int(os.environ.get("PORT", 8080))
+        _app.run(host="0.0.0.0", port=port, debug=False, use_reloader=False)
+
+    _flask_thread = threading.Thread(target=_run_flask, daemon=True)
+    _flask_thread.start()
+    print("[BARAKA] Flask health endpoint actif")
+except ImportError:
+    print("[BARAKA] Flask non disponible - mode Railway")
 import numpy as np
 import yfinance as yf
 from tradingview_ta import TA_Handler, Interval
@@ -167,7 +191,7 @@ def groq_call(prompt, max_tokens=400, temp=0.25):
             client.api_key = GROQ_API_KEY
             return ""
         resp = client.chat.completions.create(
-            model="llama3-70b-8192",
+            model="llama-3.3-70b-versatile",
             messages=[{"role":"user","content":prompt}],
             max_tokens=max_tokens,
             temperature=temp,
@@ -223,9 +247,9 @@ def _log_email_sent(subject):
             json.dump(log, f)
     except: pass
 
-def send_email(subject, html):
-    # Anti-doublon: eviter d'envoyer le meme email 2 fois en 20 min
-    if _check_email_duplicate(subject):
+def send_email(subject, html, skip_dedup=False):
+    # Anti-doublon uniquement pour les alertes urgentes (pas les emails programmes)
+    if not skip_dedup and _check_email_duplicate(subject):
         print(f"[BARAKA] Email doublon evite: {subject[:50]}")
         return True
     # Methode 1 : Resend API (HTTP - fonctionne sur Railway)
@@ -2194,7 +2218,7 @@ def _run_alert_safe(subject_type):
         "cloture": "BARAKA v5 - CLOTURE BVC - Decision + Hold Semaine",
     }
     try:
-        result = send_email(titles[subject_type], html)
+        result = send_email(titles[subject_type], html, skip_dedup=True)
         print(f"[BARAKA] Email {subject_type} envoye: {result}")
     except Exception as e:
         print(f"[BARAKA] run_alert send error: {e}")
@@ -2526,7 +2550,7 @@ def _night_analysis_safe():
         "<strong style='color:#8B5CF6'>Prochaine alerte: 8h30 pre-marche</strong>"
         "</div></div></body></html>"
     )
-    send_email("BARAKA - ANALYSE NOCTURNE - These pour demain", html)
+    send_email("BARAKA - ANALYSE NOCTURNE - These pour demain", html, skip_dedup=True)
     print("[BARAKA] Analyse nuit OK")
 
 
@@ -2633,7 +2657,7 @@ def _pre_market_brief_safe():
         "<strong style='color:#00C87A'>Prochain email: Signal Matin 10h00</strong>"
         "</div></div></body></html>"
     )
-    send_email("BARAKA - BRIEF PRE-MARCHE 8h30 - Strategie ouverture", html)
+    send_email("BARAKA - BRIEF PRE-MARCHE 8h30 - Strategie ouverture", html, skip_dedup=True)
     print("[BARAKA] Brief pre-marche OK")
 
 
@@ -2806,7 +2830,7 @@ def _send_learning_email(result, learnings):
         f"<strong style='color:#8B5CF6'>Session #{total} - Precision cumulee {acc}%</strong>"
         "</div></div></body></html>"
     )
-    send_email(f"BARAKA v5 - POST-CLOTURE - Learning #{total}", html)
+    send_email(f"BARAKA v5 - POST-CLOTURE - Learning #{total}", html, skip_dedup=True)
 
 # ═══════════════════════════════════════════════════════════
 # VOLUME MONITORING
