@@ -180,7 +180,7 @@ def groq_json(prompt, max_tokens=1200):
         pass
     return {}
 
-EMAIL_SENT_LOG = "email_sent_log.json"
+EMAIL_SENT_LOG = "/tmp/email_sent_log.json"
 
 def _check_email_duplicate(subject):
     """Retourne True si cet email a deja ete envoye dans les 20 dernieres minutes"""
@@ -746,7 +746,7 @@ def get_twitter_signals():
 # MARKET DATA
 # ═══════════════════════════════════════════════════════════
 
-TV_CACHE_FILE = "tv_cache.json"
+TV_CACHE_FILE = "/tmp/tv_cache.json"
 
 def _load_tv_cache():
     if os.path.exists(TV_CACHE_FILE):
@@ -758,52 +758,149 @@ def _load_tv_cache():
 
 def _save_tv_cache(analyses):
     try:
-        # Garder seulement les donnees non-nulles
         cache = {k: v for k, v in analyses.items() if v and v.get("close", 0) > 0}
         with open(TV_CACHE_FILE, "w") as f:
             json.dump(cache, f)
     except: pass
 
 def get_tv_analysis(ticker):
+    """Fallback individuel si le scanner batch echoue"""
     try:
-        # Essayer d'abord avec INTERVAL_1_DAY si le marche est ferme
-        now = datetime.datetime.now()
-        is_market_hours = (9 <= now.hour < 16) and (now.weekday() < 5)
-        interval = Interval.INTERVAL_15_MINUTES if is_market_hours else Interval.INTERVAL_1_DAY
-        h = TA_Handler(symbol=ticker, screener="morocco", exchange="CSE", interval=interval)
+        h = TA_Handler(symbol=ticker, screener="morocco", exchange="CSE",
+                       interval=Interval.INTERVAL_1_DAY)
         a = h.get_analysis()
         result = {
-            "ticker":         ticker,
-            "close":          a.indicators.get("close", 0),
-            "volume":         a.indicators.get("volume", 0),
-            "rsi":            a.indicators.get("RSI", 50),
-            "macd":           a.indicators.get("MACD.macd", 0),
-            "macd_signal":    a.indicators.get("MACD.signal", 0),
-            "macd_hist":      a.indicators.get("MACD.hist", 0),
-            "ema20":          a.indicators.get("EMA20", 0),
-            "ema50":          a.indicators.get("EMA50", 0),
-            "ema200":         a.indicators.get("EMA200", 0),
-            "vwap":           a.indicators.get("VWAP", 0),
-            "bb_upper":       a.indicators.get("BB.upper", 0),
-            "bb_lower":       a.indicators.get("BB.lower", 0),
-            "stoch_k":        a.indicators.get("Stoch.K", 50),
-            "stoch_d":        a.indicators.get("Stoch.D", 50),
-            "adx":            a.indicators.get("ADX", 0),
-            "cci":            a.indicators.get("CCI20", 0),
-            "atr":            a.indicators.get("ATR", 0),
-            "change":         a.indicators.get("change", 0),
-            "high":           a.indicators.get("high", 0),
-            "low":            a.indicators.get("low", 0),
+            "ticker": ticker,
+            "close":  a.indicators.get("close", 0),
+            "volume": a.indicators.get("volume", 0),
+            "rsi":    a.indicators.get("RSI", 50),
+            "macd":   a.indicators.get("MACD.macd", 0),
+            "macd_signal": a.indicators.get("MACD.signal", 0),
+            "macd_hist": a.indicators.get("MACD.hist", 0),
+            "ema20":  a.indicators.get("EMA20", 0),
+            "ema50":  a.indicators.get("EMA50", 0),
+            "ema200": a.indicators.get("EMA200", 0),
+            "vwap":   a.indicators.get("VWAP", 0),
+            "bb_upper": a.indicators.get("BB.upper", 0),
+            "bb_lower": a.indicators.get("BB.lower", 0),
+            "stoch_k": a.indicators.get("Stoch.K", 50),
+            "stoch_d": a.indicators.get("Stoch.D", 50),
+            "adx":    a.indicators.get("ADX", 0),
+            "cci":    a.indicators.get("CCI20", 0),
+            "atr":    a.indicators.get("ATR", 0),
+            "change": a.indicators.get("change", 0),
+            "high":   a.indicators.get("high", 0),
+            "low":    a.indicators.get("low", 0),
             "recommendation": a.summary.get("RECOMMENDATION", "NEUTRAL"),
             "buy_signals":    a.summary.get("BUY", 0),
             "sell_signals":   a.summary.get("SELL", 0),
         }
         return result if result["close"] > 0 else None
-    except Exception as e:
-        print(f"[TV] {ticker}: {e}")
+    except:
         return None
 
-MACRO_CACHE = "macro_cache.json"
+def get_all_bvc_scanner():
+    """
+    Recupere TOUS les stocks BVC en UNE SEULE requete via le scanner TradingView.
+    Beaucoup plus efficace et moins susceptible d etre bloque que 70 requetes individuelles.
+    """
+    TV_HEADERS = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+        "Content-Type": "application/json",
+        "Origin": "https://www.tradingview.com",
+        "Referer": "https://www.tradingview.com/markets/stocks-morocco/market-movers-large-cap/",
+        "Accept": "application/json",
+        "Accept-Language": "fr-FR,fr;q=0.9,en-US;q=0.8",
+        "Accept-Encoding": "gzip, deflate, br",
+        "sec-ch-ua": '"Not_A Brand";v="8", "Chromium";v="120"',
+        "sec-fetch-dest": "empty",
+        "sec-fetch-mode": "cors",
+        "sec-fetch-site": "same-site",
+    }
+    payload = {
+        "filter": [],
+        "options": {"lang": "fr"},
+        "symbols": {"query": {"types": []}, "tickers": []},
+        "columns": [
+            "name", "close", "volume", "change",
+            "RSI", "MACD.macd", "MACD.signal", "MACD.hist",
+            "EMA20", "EMA50", "EMA200", "VWAP",
+            "BB.upper", "BB.lower", "Stoch.K", "Stoch.D",
+            "ADX", "CCI20", "ATR", "high", "low",
+            "Recommend.All", "buy_signals_count", "sell_signals_count",
+        ],
+        "sort": {"sortBy": "market_cap_basic", "sortOrder": "desc"},
+        "range": [0, 100],
+    }
+    analyses = {}
+    try:
+        r = requests.post(
+            "https://scanner.tradingview.com/morocco/scan",
+            headers=TV_HEADERS,
+            json=payload,
+            timeout=20,
+            verify=False,
+        )
+        if r.status_code != 200:
+            print(f"[TV SCANNER] HTTP {r.status_code}")
+            return {}
+        data = r.json()
+        rows = data.get("data", [])
+        print(f"[TV SCANNER] {len(rows)} titres recus")
+        for row in rows:
+            name   = row.get("s", "").replace("CSE:", "")
+            values = row.get("d", [])
+            if len(values) < 4 or not values[1]:
+                continue
+            # Matcher avec notre BVC dict
+            ticker = None
+            for t in BVC:
+                if name == t or name.upper() == t.upper():
+                    ticker = t
+                    break
+            if not ticker:
+                continue
+            def v(i, default=0):
+                try:
+                    val = values[i]
+                    return float(val) if val is not None else default
+                except:
+                    return default
+            rec_val = v(20, 0)
+            if rec_val > 0.1:    rec = "BUY"
+            elif rec_val < -0.1: rec = "SELL"
+            else:                rec = "NEUTRAL"
+            analyses[ticker] = {
+                "ticker":      ticker,
+                "close":       v(1),
+                "volume":      int(v(2)),
+                "change":      round(v(3), 2),
+                "rsi":         v(4, 50),
+                "macd":        v(5),
+                "macd_signal": v(6),
+                "macd_hist":   v(7),
+                "ema20":       v(8),
+                "ema50":       v(9),
+                "ema200":      v(10),
+                "vwap":        v(11),
+                "bb_upper":    v(12),
+                "bb_lower":    v(13),
+                "stoch_k":     v(14, 50),
+                "stoch_d":     v(15, 50),
+                "adx":         v(16),
+                "cci":         v(17),
+                "atr":         v(18),
+                "high":        v(19),
+                "low":         v(20),
+                "recommendation": rec,
+                "buy_signals":  int(v(21)),
+                "sell_signals": int(v(22)),
+            }
+    except Exception as e:
+        print(f"[TV SCANNER] {e}")
+    return analyses
+
+MACRO_CACHE = "/tmp/macro_cache.json"
 
 def _load_macro_cache():
     if os.path.exists(MACRO_CACHE):
@@ -1363,26 +1460,36 @@ def score_action(tv, info, vp, macro, rates, learnings, news_data=None, social_d
 # ═══════════════════════════════════════════════════════════
 
 def run_full_analysis():
-    print(f"[BARAKA] Analyse {len(BVC)} titres TV...")
-    analyses = {}
-    for ticker in BVC:
+    print(f"[BARAKA] Analyse BVC - Scanner TradingView...")
+    # Methode 1 : Scanner batch (1 seule requete pour tout le marche)
+    analyses = get_all_bvc_scanner()
+    ok = len(analyses)
+    print(f"[BARAKA] Scanner: {ok} titres")
+    if ok >= 15:
+        _save_tv_cache(analyses)
+        return analyses
+    # Methode 2 : Fallback individuel (si scanner echoue)
+    print("[BARAKA] Scanner insuffisant - tentative individuelle...")
+    priority = [t for t, i in BVC.items() if i["mc"] == "large"]
+    for ticker in priority:
+        if ticker in analyses:
+            continue
         a = get_tv_analysis(ticker)
         if a:
             analyses[ticker] = a
-        time.sleep(0.35)
+        time.sleep(1.5)
     ok = len(analyses)
-    print(f"[BARAKA] {ok}/{len(BVC)} OK")
-    # Si moins de 10 titres => utiliser le cache
-    if ok < 10:
-        print("[BARAKA] TV insuffisant - chargement cache TV")
+    print(f"[BARAKA] {ok} titres apres fallback")
+    if ok >= 10:
+        _save_tv_cache(analyses)
+    else:
+        # Methode 3 : Cache
+        print("[BARAKA] Chargement cache TV")
         cached = _load_tv_cache()
         for ticker, data in cached.items():
             if ticker not in analyses:
                 analyses[ticker] = data
-        print(f"[BARAKA] Apres cache: {len(analyses)} titres")
-    elif ok >= 20:
-        # Sauvegarder si bonne session
-        _save_tv_cache(analyses)
+        print(f"[BARAKA] {len(analyses)} titres apres cache")
     return analyses
 
 def run_vp_for_top(analyses):
@@ -2177,13 +2284,11 @@ def event_check():
                     urgent.append({"type":event_type,"detail":text[:200],"score":score,"direction":"varies"})
                     break
 
-    # Smart money - seulement pendant les heures de marche
-    analyses = {}
-    now_h = datetime.datetime.now()
-    is_market = (9 <= now_h.hour < 16) and (now_h.weekday() < 5)
-    if is_market:
+    # Smart money - utiliser UNIQUEMENT le cache TV (ne pas appeler TV dans event_check)
+    # Ceci preserves le quota TradingView pour les emails programmes
+    analyses = _load_tv_cache()
+    if analyses:
         try:
-            analyses = run_full_analysis()
             sm, sectors_coordinated = detect_smart_money(analyses)
             if sm and (len(sm) >= 2 or (sm and sm[0]["vol_ratio"] >= 6)):
                 tickers_sm = ", ".join([s["ticker"] for s in sm[:4]])
@@ -2197,10 +2302,6 @@ def event_check():
                 })
         except Exception as e:
             print(f"[SM DETECT] {e}")
-            analyses = {}
-    else:
-        # En dehors des heures - utiliser le cache TV
-        analyses = _load_tv_cache()
 
     if urgent:
         rates = get_rates()
@@ -2746,20 +2847,6 @@ def run_scheduler():
     # Surveillance volumes heures marche
     schedule.every(15).minutes.do(monitor_volumes)
 
-    # Email de demarrage - une seule fois (evite les doublons au restart)
-    startup_flag = "baraka_started.flag"
-    if not os.path.exists(startup_flag):
-        open(startup_flag, "w").write(str(datetime.datetime.now()))
-        send_email(
-            "BARAKA v5 - DEMARRAGE OK",
-            "<div style='background:#0A0D14;color:#E8E4D6;font-family:Courier New;padding:30px;'>"
-            "<h1 style='color:#C9A84C;letter-spacing:4px'>BARAKA v5.0</h1>"
-            "<p style='color:#00C87A;font-size:16px'>Systeme demarre avec succes!</p>"
-            "<p style='color:#9CA3AF'>Baraka est actif 24h/24 et surveille la BVC.</p>"
-            "<p style='color:#9CA3AF'>Prochain email: Signal Matin 10h00</p>"
-            "</div>"
-        )
-        print("[BARAKA] Email demarrage envoye")
     print("[BARAKA] Actif 24h/24 - Smart Filter active - Baraka anticipe le marche...")
     while True:
         schedule.run_pending()
