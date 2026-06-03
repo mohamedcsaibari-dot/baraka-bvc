@@ -1178,7 +1178,13 @@ def _scrape_oc():
 
 def get_volume_profile(ticker_yf, period="3mo", bins=30):
     try:
+        import signal as sig_module
+        def _timeout_handler(signum, frame):
+            raise TimeoutError("yfinance timeout")
+        sig_module.signal(sig_module.SIGALRM, _timeout_handler)
+        sig_module.alarm(8)  # 8 secondes max
         data = yf.download(ticker_yf, period=period, interval="1d", progress=False, auto_adjust=True)
+        sig_module.alarm(0)  # Annuler le timeout
         if data is None or len(data) < 5:
             return None
         data   = data.dropna()
@@ -1493,19 +1499,23 @@ def run_full_analysis():
     return analyses
 
 def run_vp_for_top(analyses):
-    priority = [t for t, i in BVC.items() if i["mc"] in ["large","mid"]]
+    # Ne pas appeler VP si pas assez de donnees TV (evite le blocage yfinance)
+    if len(analyses) < 5:
+        print("[BARAKA] VP skipped - pas assez de donnees TV")
+        return {}
+    priority = [t for t, i in BVC.items() if i["mc"] in ["large","mid"] and t in analyses]
     top_tv   = sorted(
         [(t, analyses[t].get("buy_signals", 0)) for t in analyses if analyses.get(t, {}).get("buy_signals", 0) > 5],
         key=lambda x: -x[1]
-    )[:12]
-    tickers  = list(set([t for t, _ in top_tv] + priority))[:18]
+    )[:8]
+    tickers  = list(set([t for t, _ in top_tv] + priority[:10]))[:12]
     vps      = {}
     for ticker in tickers:
         yf_sym = BVC.get(ticker, {}).get("yf", f"{ticker}.CS")
         vp     = get_volume_profile(yf_sym)
         if vp:
             vps[ticker] = vp
-        time.sleep(0.5)
+        time.sleep(0.3)
     return vps
 
 def get_top_signals(analyses, vps, macro, rates, learnings, news_c, social_c, n=3):
@@ -2209,9 +2219,20 @@ def run_alert(subject_type):
         "cloture": "BARAKA v5 - CLOTURE BVC - Decision + Hold Semaine",
     }
     try:
-        send_email(titles[subject_type], html)
+        result = send_email(titles[subject_type], html)
+        print(f"[BARAKA] Email {subject_type} envoye: {result}")
     except Exception as e:
         print(f"[BARAKA] run_alert send error: {e}")
+        # Tentative de secours avec email minimal
+        try:
+            send_email(
+                titles[subject_type],
+                f"<div style='background:#0A0D14;color:#E8E4D6;padding:20px;font-family:monospace'>"
+                f"<h2 style='color:#C9A84C'>BARAKA v5 - {subject_type.upper()}</h2>"
+                f"<p style='color:#9CA3AF'>Analyse en cours. Donnees limitees.</p>"
+                f"<p style='color:#6B7280'>{str(datetime.datetime.now())}</p></div>"
+            )
+        except: pass
 
 
 # ═══════════════════════════════════════════════════════════
