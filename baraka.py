@@ -3,7 +3,15 @@ BARAKA v5.0 - Wall Street Level BVC Trading Agent
 24h/24 - Smart Filter - PDF AMMC - Google News - Telegram - Volume Profile
 """
 
-import schedule, time, datetime, json, os, requests, smtplib, re, hashlib, io
+# Forcer le fuseau horaire Casablanca
+import os, time as _t
+os.environ["TZ"] = "Africa/Casablanca"
+try:
+    _t.tzset()
+except:
+    pass
+
+import schedule, time, datetime, json, requests, smtplib, re, hashlib, io
 import numpy as np
 import yfinance as yf
 from tradingview_ta import TA_Handler, Interval
