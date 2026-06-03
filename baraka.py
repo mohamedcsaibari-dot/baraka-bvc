@@ -41,6 +41,11 @@ F = {
 }
 
 HEADERS = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"}
+
+# Desactiver warnings SSL (Railway a des problemes de certificats)
+import urllib3
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+REQ_OPTS = {"verify": False, "timeout": 12}
 AMMC_URL = "https://www.ammc.ma/fr/communiques-presse-emetteurs"
 VOL_THRESHOLD = 2.5
 URGENCY_LIMIT = 85
@@ -343,7 +348,7 @@ def scrape_ammc_publications():
     try:
         for page in range(0, 4):
             url  = f"{AMMC_URL}?page={page}" if page > 0 else AMMC_URL
-            r    = requests.get(url, headers=HEADERS, timeout=15)
+            r    = requests.get(url, headers=HEADERS, **REQ_OPTS)
             if r.status_code != 200:
                 break
             soup = BeautifulSoup(r.text, "html.parser")
@@ -384,7 +389,7 @@ def scrape_ammc_publications():
 def download_pdf_text(url):
     text = ""
     try:
-        r = requests.get(url, headers=HEADERS, timeout=20)
+        r = requests.get(url, headers=HEADERS, **REQ_OPTS)
         if r.status_code != 200:
             return ""
         if PDF_OK:
@@ -517,7 +522,7 @@ def get_company_google_news(ticker, query):
     try:
         q   = quote(query + " 2026")
         url = f"https://news.google.com/rss/search?q={q}&hl=fr&gl=MA&ceid=MA:fr"
-        r   = requests.get(url, headers=HEADERS, timeout=8)
+        r   = requests.get(url, headers=HEADERS, **REQ_OPTS)
         titles  = re.findall(r"<title><!\[CDATA\[(.*?)\]\]></title>", r.text)
         dates   = re.findall(r"<pubDate>(.*?)</pubDate>", r.text)
         sources = re.findall(r"<source.*?>(.*?)</source>", r.text)
@@ -543,7 +548,7 @@ def get_google_news_general(queries):
         try:
             q   = quote(query)
             url = f"https://news.google.com/rss/search?q={q}&hl=fr&gl=MA&ceid=MA:fr"
-            r   = requests.get(url, headers=HEADERS, timeout=8)
+            r   = requests.get(url, headers=HEADERS, **REQ_OPTS)
             titles = re.findall(r"<title>(.*?)</title>", r.text)
             for t in titles[1:4]:
                 clean = re.sub(r"<[^>]+>", "", t).strip()
@@ -625,7 +630,7 @@ def scrape_telegram_channel(channel_name):
     posts = []
     try:
         url  = f"https://t.me/s/{channel_name}"
-        r    = requests.get(url, headers=HEADERS, timeout=10)
+        r    = requests.get(url, headers=HEADERS, **REQ_OPTS)
         if r.status_code != 200:
             return []
         soup = BeautifulSoup(r.text, "html.parser")
@@ -723,7 +728,7 @@ def get_twitter_signals():
     for account, label in accounts:
         for n in nitter:
             try:
-                r = requests.get(f"{n}/{account}/rss", headers=HEADERS, timeout=6)
+                r = requests.get(f"{n}/{account}/rss", headers=HEADERS, **REQ_OPTS)
                 if r.status_code != 200:
                     continue
                 items = re.findall(r"<title><!\[CDATA\[(.*?)\]\]></title>", r.text)
@@ -843,53 +848,110 @@ def _get_frankfurter(base="USD", target="MAD"):
 
 def get_global_macro():
     macro = {}
-    # Donnees Stooq (fonctionne sur Railway - pas de blocage)
-    stooq_map = {
-        "sp500":   "^spx",
-        "nasdaq":  "^ndx",
-        "dax":     "^dax",
-        "cac40":   "^cac",
-        "gold":    "xauusd",
-        "silver":  "xagusd",
-        "copper":  "hgusx",
-        "brent":   "brent.f",
-        "oil_wti": "cl.f",
-        "natgas":  "ng.f",
-        "us10y":   "10ust.b",
-        "us2y":    "2ust.b",
-        "dxy":     "dxy.f",
-        "eur_usd": "eurusd",
-    }
-    for name, sym in stooq_map.items():
-        result = _get_stooq(sym)
-        macro[name] = result if result else {"price": 0, "change": 0}
-        time.sleep(0.3)
+    # Source 1: Twelve Data (gratuit 800 req/jour - fonctionne sur Railway)
+    def _get_twelve(symbol, interval="1day"):
+        try:
+            url = f"https://api.twelvedata.com/time_series?symbol={symbol}&interval={interval}&outputsize=2&apikey=demo"
+            r   = requests.get(url, headers=HEADERS, **REQ_OPTS)
+            d   = r.json()
+            vals = d.get("values", [])
+            if len(vals) >= 2:
+                curr = float(vals[0]["close"])
+                prev = float(vals[1]["close"])
+                chg  = (curr - prev) / prev * 100 if prev else 0
+                return {"price": round(curr, 4), "change": round(chg, 3)}
+        except: pass
+        return None
 
-    # Taux de change MAD via Frankfurter
-    usd_mad = _get_frankfurter("USD", "MAD")
-    eur_mad = _get_frankfurter("EUR", "MAD")
+    # Source 2: FRED (Federal Reserve) pour taux US
+    def _get_fred(series):
+        try:
+            url = f"https://fred.stlouisfed.org/graph/fredgraph.csv?id={series}"
+            r   = requests.get(url, headers=HEADERS, **REQ_OPTS)
+            lines = r.text.strip().splitlines()
+            if len(lines) >= 3:
+                last = float(lines[-1].split(",")[1])
+                prev = float(lines[-2].split(",")[1])
+                chg  = (last - prev) / prev * 100 if prev else 0
+                return {"price": round(last, 4), "change": round(chg, 3)}
+        except: pass
+        return None
+
+    # Source 3: Metaux précieux via metals-api (gratuit)
+    def _get_metal_price(metal="XAU"):
+        try:
+            r = requests.get(f"https://api.metals.live/v1/spot/{metal.lower()}",
+                             headers=HEADERS, **REQ_OPTS)
+            data = r.json()
+            if isinstance(data, list) and data:
+                price = data[0].get("price", 0)
+                return {"price": round(float(price), 2), "change": 0}
+        except: pass
+        return None
+
+    # Source 4: ExchangeRate pour MAD
+    def _get_exchange_rate(base="USD", target="MAD"):
+        try:
+            r = requests.get(f"https://open.er-api.com/v6/latest/{base}",
+                             headers=HEADERS, **REQ_OPTS)
+            data = r.json()
+            rate = data.get("rates", {}).get(target, 0)
+            if rate:
+                return {"price": round(float(rate), 4), "change": 0}
+        except: pass
+        return None
+
+    # Remplir les indicateurs
+    twelve_map = {
+        "sp500": "SPX", "nasdaq": "NDX", "brent": "BRENT",
+        "gold": "XAU/USD", "eur_usd": "EUR/USD",
+    }
+    for name, sym in twelve_map.items():
+        result = _get_twelve(sym)
+        macro[name] = result if result else {"price": 0, "change": 0}
+        time.sleep(0.2)
+
+    # FRED pour taux
+    fred_map = {"us10y": "DGS10", "us2y": "DGS2", "us30y": "DGS30"}
+    for name, series in fred_map.items():
+        result = _get_fred(series)
+        macro[name] = result if result else {"price": 0, "change": 0}
+        time.sleep(0.2)
+
+    # Or et Argent
+    gold = _get_metal_price("XAU")
+    if gold and gold["price"] > 0:
+        macro["gold"] = gold
+    if "gold" not in macro or macro["gold"]["price"] == 0:
+        macro["gold"] = {"price": 0, "change": 0}
+
+    # MAD exchange rate
+    usd_mad = _get_exchange_rate("USD", "MAD")
+    eur_mad = _get_exchange_rate("EUR", "MAD")
     macro["usd_mad"] = usd_mad if usd_mad else {"price": 10.0, "change": 0}
     macro["eur_mad"] = eur_mad if eur_mad else {"price": 10.9, "change": 0}
 
-    # VIX via CBOE
-    try:
-        r = requests.get("https://query1.finance.yahoo.com/v8/finance/chart/%5EVIX?interval=1d&range=2d",
-                         headers={**HEADERS, "User-Agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 14_0 like Mac OS X)"}, timeout=10)
-        data = r.json()
-        closes = data["chart"]["result"][0]["indicators"]["quote"][0]["close"]
-        closes = [c for c in closes if c is not None]
-        if len(closes) >= 2:
-            macro["vix"] = {"price": round(closes[-1], 2), "change": round((closes[-1]-closes[-2])/closes[-2]*100, 3)}
-        elif len(closes) == 1:
-            macro["vix"] = {"price": round(closes[-1], 2), "change": 0}
-        else:
-            macro["vix"] = {"price": 20.0, "change": 0}
-    except:
-        macro["vix"] = {"price": 20.0, "change": 0}
+    # VIX - multiple tentatives
+    vix_val = 20.0
+    for vix_url in [
+        "https://query1.finance.yahoo.com/v8/finance/chart/%5EVIX?interval=1d&range=2d",
+        "https://query2.finance.yahoo.com/v8/finance/chart/%5EVIX?interval=1d&range=2d",
+    ]:
+        try:
+            r    = requests.get(vix_url, headers={**HEADERS, "Accept": "application/json"}, **REQ_OPTS)
+            data = r.json()
+            closes = data["chart"]["result"][0]["indicators"]["quote"][0]["close"]
+            closes = [c for c in closes if c is not None]
+            if closes:
+                vix_val = float(closes[-1])
+                break
+        except: continue
+    macro["vix"] = {"price": round(vix_val, 2), "change": 0}
 
-    # Fallbacks manquants
-    for k in ["stoxx50", "us30y"]:
-        if k not in macro:
+    # Defaults pour les non-remplis
+    for k in ["nasdaq", "dax", "cac40", "stoxx50", "silver", "copper",
+              "oil_wti", "natgas", "dxy", "us2y"]:
+        if k not in macro or macro.get(k, {}).get("price", 0) == 0:
             macro[k] = {"price": 0, "change": 0}
 
     # Verifier qualite des donnees
@@ -943,7 +1005,7 @@ def get_global_macro():
 def get_rates():
     rates = {"fed": 5.25, "ecb": 3.5, "bam": 3.0, "bam_news": []}
     try:
-        r = requests.get("https://fred.stlouisfed.org/graph/fredgraph.csv?id=FEDFUNDS", headers=HEADERS, timeout=10)
+        r = requests.get("https://fred.stlouisfed.org/graph/fredgraph.csv?id=FEDFUNDS", headers=HEADERS, **REQ_OPTS)
         lines = r.text.strip().split("\n")
         if len(lines) > 1:
             v = float(lines[-1].split(",")[1])
@@ -952,7 +1014,7 @@ def get_rates():
     except:
         pass
     try:
-        r    = requests.get("https://www.bkam.ma/Politique-monetaire", headers=HEADERS, timeout=12)
+        r    = requests.get("https://www.bkam.ma/Politique-monetaire", headers=HEADERS, **REQ_OPTS)
         soup = BeautifulSoup(r.text, "html.parser")
         text = r.text.lower()
         for m in re.findall(r'(\d+[.,]\d+)\s*%', text):
@@ -987,7 +1049,7 @@ def get_masi():
 
 def _scrape_boursenews():
     try:
-        r    = requests.get("https://www.boursenews.ma/", headers=HEADERS, timeout=10)
+        r    = requests.get("https://www.boursenews.ma/", headers=HEADERS, **REQ_OPTS)
         soup = BeautifulSoup(r.text, "html.parser")
         news = [item.get_text(strip=True)[:160] for item in soup.select("article,h2 a,h3 a")[:10] if len(item.get_text(strip=True)) > 20]
         return list(dict.fromkeys(news))[:5]
@@ -996,7 +1058,7 @@ def _scrape_boursenews():
 
 def _scrape_ammc_news():
     try:
-        r    = requests.get("https://www.ammc.ma/fr/actualites", headers=HEADERS, timeout=10)
+        r    = requests.get("https://www.ammc.ma/fr/actualites", headers=HEADERS, **REQ_OPTS)
         soup = BeautifulSoup(r.text, "html.parser")
         items = [i.get_text(strip=True)[:160] for i in soup.select(".views-row,article,h3 a,h2 a")[:6] if len(i.get_text(strip=True)) > 20]
         return list(dict.fromkeys(items))[:4]
@@ -1005,7 +1067,7 @@ def _scrape_ammc_news():
 
 def _scrape_oc():
     try:
-        r    = requests.get("https://www.oc.gov.ma/fr/publications", headers=HEADERS, timeout=10)
+        r    = requests.get("https://www.oc.gov.ma/fr/publications", headers=HEADERS, **REQ_OPTS)
         soup = BeautifulSoup(r.text, "html.parser")
         items = [i.get_text(strip=True)[:160] for i in soup.select("article,.views-row,h3 a,h2 a")[:5] if len(i.get_text(strip=True)) > 20]
         return list(dict.fromkeys(items))[:3]
@@ -2064,7 +2126,7 @@ def get_all_news_fast():
     texts.extend(_scrape_boursenews())
     texts.extend(_scrape_ammc_news())
     try:
-        r    = requests.get("https://www.bkam.ma/Politique-monetaire", headers=HEADERS, timeout=8)
+        r    = requests.get("https://www.bkam.ma/Politique-monetaire", headers=HEADERS, **REQ_OPTS)
         soup = BeautifulSoup(r.text, "html.parser")
         for el in soup.select("p,h2,h3")[:10]:
             t = el.get_text(strip=True)
