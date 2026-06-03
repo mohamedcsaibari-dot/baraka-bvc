@@ -45,7 +45,8 @@ HEADERS = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/
 # Desactiver warnings SSL (Railway a des problemes de certificats)
 import urllib3
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
-REQ_OPTS = {"verify": False, "timeout": 12}
+REQ_OPTS      = {"verify": False, "timeout": 8}
+REQ_OPTS_FAST = {"verify": False, "timeout": 4}  # Pour les appels optionnels
 AMMC_URL = "https://www.ammc.ma/fr/communiques-presse-emetteurs"
 VOL_THRESHOLD = 2.5
 URGENCY_LIMIT = 85
@@ -723,23 +724,24 @@ def _analyze_social_rumors(posts, news_cache):
 
 def get_twitter_signals():
     signals  = []
-    accounts = [("federalreserve","FED"),("BankAlMaghrib","BAM"),("ecb","ECB"),("IMFNews","FMI"),("ReutersBiz","Reuters")]
-    nitter   = ["https://nitter.poast.org","https://nitter.privacydev.net","https://nitter.1d4.us"]
+    # Seulement BAM et FED (les plus importants, timeout rapide)
+    accounts = [("BankAlMaghrib","BAM"),("federalreserve","FED")]
+    nitter   = ["https://nitter.poast.org","https://nitter.privacydev.net"]
     for account, label in accounts:
         for n in nitter:
             try:
-                r = requests.get(f"{n}/{account}/rss", headers=HEADERS, **REQ_OPTS)
+                r = requests.get(f"{n}/{account}/rss", headers=HEADERS, **REQ_OPTS_FAST)
                 if r.status_code != 200:
                     continue
                 items = re.findall(r"<title><!\[CDATA\[(.*?)\]\]></title>", r.text)
-                for item in items[1:3]:
+                for item in items[1:2]:
                     clean = re.sub(r"<[^>]+>","",item).strip()
                     if len(clean) > 20:
                         signals.append({"source": label, "text": clean[:200]})
                 break
             except:
                 continue
-    return signals[:8]
+    return signals[:4]
 
 
 # ═══════════════════════════════════════════════════════════
@@ -847,21 +849,39 @@ def get_all_bvc_scanner():
         data = r.json()
         rows = data.get("data", [])
         print(f"[TV SCANNER] {len(rows)} titres recus")
+        # Debug: afficher les premiers noms pour diagnostic
+        sample_names = [row.get("s","") for row in rows[:8]]
+        print(f"[TV SCANNER] Noms exemples: {sample_names}")
         for row in rows:
-            name   = row.get("s", "").replace("CSE:", "")
-            values = row.get("d", [])
-            if len(values) < 4 or not values[1]:
+            raw_name = row.get("s", "")
+            name     = raw_name.replace("CSE:", "").replace("CASABLANCA:", "").strip().upper()
+            values   = row.get("d", [])
+            if len(values) < 2:
                 continue
+            # Close peut etre null si marche ferme - accepter quand meme
             # Matcher avec notre BVC dict
             ticker = None
-            for t in BVC:
-                if name == t or name.upper() == t.upper():
-                    ticker = t
-                    break
+            # Match exact
+            if name in BVC:
+                ticker = name
+            else:
+                # Match partiel (ex: "ATTIJARIWAFA" -> "ATW")
+                for t, info in BVC.items():
+                    t_up   = t.upper()
+                    name_n = info["n"].upper()
+                    if (t_up == name or
+                        t_up in name or
+                        name in t_up or
+                        name_n.split()[0] in name or
+                        name.split()[0] in name_n):
+                        ticker = t
+                        break
             if not ticker:
                 continue
             def v(i, default=0):
                 try:
+                    if i >= len(values):
+                        return default
                     val = values[i]
                     return float(val) if val is not None else default
                 except:
@@ -945,110 +965,40 @@ def _get_frankfurter(base="USD", target="MAD"):
 
 def get_global_macro():
     macro = {}
-    # Source 1: Twelve Data (gratuit 800 req/jour - fonctionne sur Railway)
-    def _get_twelve(symbol, interval="1day"):
-        try:
-            url = f"https://api.twelvedata.com/time_series?symbol={symbol}&interval={interval}&outputsize=2&apikey=demo"
-            r   = requests.get(url, headers=HEADERS, **REQ_OPTS)
-            d   = r.json()
-            vals = d.get("values", [])
-            if len(vals) >= 2:
-                curr = float(vals[0]["close"])
-                prev = float(vals[1]["close"])
-                chg  = (curr - prev) / prev * 100 if prev else 0
-                return {"price": round(curr, 4), "change": round(chg, 3)}
-        except: pass
-        return None
-
-    # Source 2: FRED (Federal Reserve) pour taux US
-    def _get_fred(series):
+    # FRED pour taux US (fiable sur Railway)
+    fred_map = {"us10y": "DGS10", "us2y": "DGS2", "fed_rate": "FEDFUNDS"}
+    for name, series in fred_map.items():
         try:
             url = f"https://fred.stlouisfed.org/graph/fredgraph.csv?id={series}"
-            r   = requests.get(url, headers=HEADERS, **REQ_OPTS)
+            r   = requests.get(url, headers=HEADERS, **REQ_OPTS_FAST)
             lines = r.text.strip().splitlines()
             if len(lines) >= 3:
                 last = float(lines[-1].split(",")[1])
                 prev = float(lines[-2].split(",")[1])
                 chg  = (last - prev) / prev * 100 if prev else 0
-                return {"price": round(last, 4), "change": round(chg, 3)}
-        except: pass
-        return None
+                macro[name] = {"price": round(last, 4), "change": round(chg, 3)}
+            else:
+                macro[name] = {"price": 0, "change": 0}
+        except:
+            macro[name] = {"price": 0, "change": 0}
 
-    # Source 3: Metaux précieux via metals-api (gratuit)
-    def _get_metal_price(metal="XAU"):
-        try:
-            r = requests.get(f"https://api.metals.live/v1/spot/{metal.lower()}",
-                             headers=HEADERS, **REQ_OPTS)
-            data = r.json()
-            if isinstance(data, list) and data:
-                price = data[0].get("price", 0)
-                return {"price": round(float(price), 2), "change": 0}
-        except: pass
-        return None
+    # USD/MAD exchange rate (fiable)
+    try:
+        r = requests.get("https://open.er-api.com/v6/latest/USD",
+                         headers=HEADERS, **REQ_OPTS_FAST)
+        data = r.json()
+        rates_data = data.get("rates", {})
+        macro["usd_mad"] = {"price": round(float(rates_data.get("MAD", 10.0)), 4), "change": 0}
+        macro["eur_mad"] = {"price": round(float(rates_data.get("MAD", 10.9)) / float(rates_data.get("EUR", 0.92)), 4), "change": 0}
+    except:
+        macro["usd_mad"] = {"price": 10.0, "change": 0}
+        macro["eur_mad"] = {"price": 10.9, "change": 0}
 
-    # Source 4: ExchangeRate pour MAD
-    def _get_exchange_rate(base="USD", target="MAD"):
-        try:
-            r = requests.get(f"https://open.er-api.com/v6/latest/{base}",
-                             headers=HEADERS, **REQ_OPTS)
-            data = r.json()
-            rate = data.get("rates", {}).get(target, 0)
-            if rate:
-                return {"price": round(float(rate), 4), "change": 0}
-        except: pass
-        return None
-
-    # Remplir les indicateurs
-    twelve_map = {
-        "sp500": "SPX", "nasdaq": "NDX", "brent": "BRENT",
-        "gold": "XAU/USD", "eur_usd": "EUR/USD",
-    }
-    for name, sym in twelve_map.items():
-        result = _get_twelve(sym)
-        macro[name] = result if result else {"price": 0, "change": 0}
-        time.sleep(0.2)
-
-    # FRED pour taux
-    fred_map = {"us10y": "DGS10", "us2y": "DGS2", "us30y": "DGS30"}
-    for name, series in fred_map.items():
-        result = _get_fred(series)
-        macro[name] = result if result else {"price": 0, "change": 0}
-        time.sleep(0.2)
-
-    # Or et Argent
-    gold = _get_metal_price("XAU")
-    if gold and gold["price"] > 0:
-        macro["gold"] = gold
-    if "gold" not in macro or macro["gold"]["price"] == 0:
-        macro["gold"] = {"price": 0, "change": 0}
-
-    # MAD exchange rate
-    usd_mad = _get_exchange_rate("USD", "MAD")
-    eur_mad = _get_exchange_rate("EUR", "MAD")
-    macro["usd_mad"] = usd_mad if usd_mad else {"price": 10.0, "change": 0}
-    macro["eur_mad"] = eur_mad if eur_mad else {"price": 10.9, "change": 0}
-
-    # VIX - multiple tentatives
-    vix_val = 20.0
-    for vix_url in [
-        "https://query1.finance.yahoo.com/v8/finance/chart/%5EVIX?interval=1d&range=2d",
-        "https://query2.finance.yahoo.com/v8/finance/chart/%5EVIX?interval=1d&range=2d",
-    ]:
-        try:
-            r    = requests.get(vix_url, headers={**HEADERS, "Accept": "application/json"}, **REQ_OPTS)
-            data = r.json()
-            closes = data["chart"]["result"][0]["indicators"]["quote"][0]["close"]
-            closes = [c for c in closes if c is not None]
-            if closes:
-                vix_val = float(closes[-1])
-                break
-        except: continue
-    macro["vix"] = {"price": round(vix_val, 2), "change": 0}
-
-    # Defaults pour les non-remplis
-    for k in ["nasdaq", "dax", "cac40", "stoxx50", "silver", "copper",
-              "oil_wti", "natgas", "dxy", "us2y"]:
-        if k not in macro or macro.get(k, {}).get("price", 0) == 0:
+    # Defaults pour tous les autres (seront recuperes du cache)
+    for k in ["vix", "sp500", "nasdaq", "dax", "cac40", "stoxx50",
+              "gold", "brent", "oil_wti", "silver", "copper", "natgas",
+              "eur_usd", "dxy", "us30y"]:
+        if k not in macro:
             macro[k] = {"price": 0, "change": 0}
 
     # Verifier qualite des donnees
@@ -1907,8 +1857,7 @@ def run_alert(subject_type):
 
     # News aggregation
     google_news  = get_google_news_general([
-        "Bourse Casablanca 2026","Bank Al-Maghrib taux 2026",
-        "OCP Maroc 2026","Maroc economie 2026","Fed rate 2026"
+        "Bourse Casablanca 2026","Bank Al-Maghrib 2026"
     ])
     twitter_sigs = get_twitter_signals()
     boursenews   = _scrape_boursenews()
