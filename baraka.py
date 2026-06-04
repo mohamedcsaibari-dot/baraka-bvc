@@ -27,6 +27,26 @@ try:
     def ping():
         return f"OK - {datetime.datetime.now().strftime('%H:%M:%S')}", 200
 
+    @_app.route("/trigger/<email_type>")
+    def trigger(email_type):
+        """Declenche manuellement un email - ex: /trigger/matin"""
+        import threading
+        valid = ["matin", "midi", "cloture", "nuit", "premarket"]
+        if email_type not in valid:
+            return f"Type invalide. Options: {valid}", 400
+        def _run():
+            try:
+                if email_type == "nuit":
+                    _night_analysis_safe()
+                elif email_type == "premarket":
+                    _pre_market_brief_safe()
+                else:
+                    _run_alert_safe(email_type)
+            except Exception as e:
+                print(f"[TRIGGER] {email_type}: {e}")
+        threading.Thread(target=_run, daemon=True).start()
+        return f"Email {email_type} declenche! Arrivee dans 1-2 min.", 200
+
     def _run_flask():
         port = int(os.environ.get("PORT", 8080))
         _app.run(host="0.0.0.0", port=port, debug=False, use_reloader=False)
@@ -1483,24 +1503,9 @@ def run_full_analysis():
     return analyses
 
 def run_vp_for_top(analyses):
-    # Ne pas appeler VP si pas assez de donnees TV (evite le blocage yfinance)
-    if len(analyses) < 5:
-        print("[BARAKA] VP skipped - pas assez de donnees TV")
-        return {}
-    priority = [t for t, i in BVC.items() if i["mc"] in ["large","mid"] and t in analyses]
-    top_tv   = sorted(
-        [(t, analyses[t].get("buy_signals", 0)) for t in analyses if analyses.get(t, {}).get("buy_signals", 0) > 5],
-        key=lambda x: -x[1]
-    )[:8]
-    tickers  = list(set([t for t, _ in top_tv] + priority[:10]))[:12]
-    vps      = {}
-    for ticker in tickers:
-        yf_sym = BVC.get(ticker, {}).get("yf", f"{ticker}.CS")
-        vp     = get_volume_profile(yf_sym)
-        if vp:
-            vps[ticker] = vp
-        time.sleep(0.3)
-    return vps
+    # VP desactive - yfinance bloque sur Railway (timeout C-extension non interruptible)
+    # Les recommandations fonctionnent sans VP
+    return {}
 
 def get_top_signals(analyses, vps, macro, rates, learnings, news_c, social_c, n=3):
     news_cache   = news_c.get("company_news", {})
