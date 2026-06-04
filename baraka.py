@@ -379,7 +379,7 @@ def _identify_company(text):
 def scrape_ammc_publications():
     publications = []
     try:
-        for page in range(0, 4):
+        for page in range(0, 8):
             url  = f"{AMMC_URL}?page={page}" if page > 0 else AMMC_URL
             r    = requests.get(url, headers=HEADERS, **REQ_OPTS)
             if r.status_code != 200:
@@ -396,18 +396,20 @@ def scrape_ammc_publications():
                     if parent:
                         parent_text = parent.get_text(" ", strip=True)
                         parent = parent.parent
-                if "2026" not in parent_text and "2026" not in text and "2026" not in href:
+                # Accepter tous les PDFs recents (pas seulement ceux mentionnant 2026)
+                is_pdf = (href.endswith(".pdf") or "pdf" in href.lower() or 
+                         "telecharger" in href.lower() or "download" in href.lower())
+                if not is_pdf:
                     continue
-                if href.endswith(".pdf") or "pdf" in href.lower() or "telecharger" in href.lower():
-                    full_url = href if href.startswith("http") else "https://www.ammc.ma" + href
-                    company  = _identify_company(text + " " + parent_text)
-                    publications.append({
-                        "url":     full_url,
-                        "title":   text[:200],
-                        "company": company,
-                        "context": parent_text[:300],
-                        "found":   str(datetime.date.today()),
-                    })
+                full_url = href if href.startswith("http") else "https://www.ammc.ma" + href
+                company  = _identify_company(text + " " + parent_text)
+                publications.append({
+                    "url":     full_url,
+                    "title":   text[:200],
+                    "company": company,
+                    "context": parent_text[:300],
+                    "found":   str(datetime.date.today()),
+                })
             time.sleep(1)
     except Exception as e:
         print(f"[AMMC SCRAPE] {e}")
@@ -2862,21 +2864,19 @@ def run_scheduler():
     print("""
 +============================================================+
 |    BARAKA v5.0 - WALL STREET LEVEL - 24h/24 - 7j/7        |
-|  Smart Filter - PDF AMMC - Google News - Telegram          |
+|  Horaires CASA (UTC+1) - Scheduler UTC                     |
 +============================================================+
 |  /7min     -> Event check URGENCES uniquement              |
 |  /15min    -> Surveillance volumes (heures marche)         |
 |  02h00     -> Analyse PDFs AMMC (background)               |
 |  03h00     -> Scan reseaux sociaux Telegram/Facebook       |
 |  06h00     -> Scan Google News par societe                 |
-|  08h30     -> Brief pre-marche                             |
-|  10h00     -> Signal Matin (tout integre)                  |
-|  12h00     -> Point Midi                                   |
-|  15h15     -> Cloture + Hold semaine +30%                  |
-|  16h30     -> Post-Cloture Apprentissage Groq              |
-|  20h00     -> Scan Google News par societe (soir)          |
-|  21h00     -> Analyse Nocturne + These demain              |
-|  22h00     -> Scan reseaux sociaux (soir)                  |
+|  08h30     -> Brief pre-marche (CASA)                      |
+|  10h00     -> Signal Matin (CASA)                          |
+|  12h00     -> Point Midi (CASA)                            |
+|  15h15     -> Cloture + Hold semaine (CASA)                |
+|  16h30     -> Post-Cloture Apprentissage Groq (CASA)       |
+|  21h00     -> Analyse Nocturne (CASA)                      |
 +============================================================+
     """)
 
@@ -2888,19 +2888,19 @@ def run_scheduler():
         schedule.every().friday,
     ]
     for d in days:
-        d.at("08:30").do(pre_market_brief)
-        d.at("10:00").do(run_alert, "matin")
-        d.at("12:00").do(run_alert, "midi")
-        d.at("15:15").do(run_alert, "cloture")
-        d.at("16:30").do(post_cloture_learning)
-        d.at("21:00").do(night_analysis)
+        d.at("07:30").do(pre_market_brief)
+        d.at("09:00").do(run_alert, "matin")
+        d.at("11:00").do(run_alert, "midi")
+        d.at("14:15").do(run_alert, "cloture")
+        d.at("15:30").do(post_cloture_learning)
+        d.at("20:00").do(night_analysis)
 
     # Background workers 7j/7
-    schedule.every().day.at("02:00").do(run_pdf_analysis_background)
-    schedule.every().day.at("03:00").do(run_social_media_scan)
-    schedule.every().day.at("06:00").do(run_company_news_scan)
-    schedule.every().day.at("20:00").do(run_company_news_scan)
-    schedule.every().day.at("22:00").do(run_social_media_scan)
+    schedule.every().day.at("01:00").do(run_pdf_analysis_background)
+    schedule.every().day.at("02:00").do(run_social_media_scan)
+    schedule.every().day.at("05:00").do(run_company_news_scan)
+    schedule.every().day.at("19:00").do(run_company_news_scan)
+    schedule.every().day.at("21:00").do(run_social_media_scan)
 
     # Event monitoring urgences 7j/7 24h/24
     schedule.every(7).minutes.do(event_check)
