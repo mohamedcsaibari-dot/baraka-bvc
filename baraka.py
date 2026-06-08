@@ -1492,8 +1492,7 @@ VERDICT FINAL (3 phrases sans markdown):
 3. Condition d'entrée PRÉCISE: à quel prix, avec quel volume, dans quel délai
 Français. Style trader hedge fund."""
 
-            analyse = groq_call(cot_prompt, 400) or "Analyse technique confirmée — setup validé."
-            analyse = groq_call(prompt, 200) or "Signaux techniques alignés — confirmation AMMC disponible."
+            analyse = groq_call(cot_prompt, 400) or "Signaux techniques alignés — confirmation AMMC disponible."
 
             ammc_pubs_html = ""
             if ammc_t:
