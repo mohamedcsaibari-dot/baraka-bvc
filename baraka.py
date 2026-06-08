@@ -502,7 +502,22 @@ BVC = {
     "RIS":     {"n":"Risma",                   "s":"Tourisme",     "v":5000,  "mc":"small"},
     "EQDOM":   {"n":"Eqdom",                   "s":"Credit Conso", "v":4000,  "mc":"small"},
     "SALAF":   {"n":"Salafin",                 "s":"Credit Conso", "v":3500,  "mc":"small"},
+    # ── ZOOM VIP QUOTIDIEN ─────────────────────────────────────────────────────
+    "ALLIANCES":{"n":"Alliances Developpement", "s":"Immobilier",  "v":8000,  "mc":"mid"},
+    "TGCC":     {"n":"TGCC",                    "s":"Construction","v":5000,  "mc":"mid"},
+    "SGTM":     {"n":"SGTM",                    "s":"Construction","v":3000,  "mc":"small"},
+    "DAR":      {"n":"Res. Dar Saada",          "s":"Immobilier",  "v":4000,  "mc":"small"},
+    "AKDITAL":  {"n":"Akdital",                 "s":"Sante",       "v":4500,  "mc":"mid"},
+    # ── MINES & MÉTAUX PRÉCIEUX ───────────────────────────────────────────────
+    "MANAGEM":  {"n":"Managem",                 "s":"Mines",       "v":12000, "mc":"mid"},
+    "SMI":      {"n":"SMI (Argent)",            "s":"Mines",       "v":8000,  "mc":"small"},
+    "CMT":      {"n":"CMT (Zinc/Plomb)",        "s":"Mines",       "v":5000,  "mc":"small"},
 }
+
+# Titres VIP — zoom quotidien approfondi
+VIP_TICKERS = ["ALLIANCES","ALM","TGCC","ADH","SGTM","DAR","AKDITAL","MANAGEM","SMI","CMT"]
+# Alias TV scanner → BVC key
+TV_ALIASES  = {"ALM":"ALLIANCES","ADH":"ADDOHA"}
 
 # ─── EMAIL ────────────────────────────────────────────────────────────────────
 def send_email(subject, html):
@@ -1009,6 +1024,9 @@ def pre_collect():
         tg      = telegram_bvc()
         bkam    = bkam_news()
         correl  = get_correlations_context(macro)
+        # Commodites et ODC dans la pre-collecte
+        comm_pre = get_commodities_maroc()
+        odc_pre  = get_office_changes()
         n_bvc   = gnews("Bourse Casablanca 2026", 5)
         n_mac   = gnews("taux Fed BCE Banque centrale mondiale 2026", 4)
         n_geo   = gnews("guerre conflit geopolitique mondial impact economie 2026", 4)
@@ -1103,6 +1121,8 @@ Français. Direct."""
                      "eur":n_eur,"china":n_china,"maroc":n_maroc,"intl":n_intl},
             "deep_analysis": deep_analysis,
             "sector_analysis": sector_analysis,
+            "commodities": comm_pre,
+            "odc": odc_pre,
             "timestamp": datetime.datetime.now().strftime("%d/%m/%Y %H:%M"),
         })
         print(f"[BARAKA] Pré-collecte OK — analyse Groq: {len(deep_analysis)} chars")
@@ -1203,6 +1223,12 @@ def brief_ouverture():
             f"{chr(10).join(correl)}\n"
             f"=== FONDAMENTAUX MAROC ===\n"
             f"AMMC aujourd hui: {[p['title'][:70] for p in ammc[:4]]}\n"
+        f"=== MATIERES PREMIERES MAROC ===\n"
+        f"Or/oz: {comm_pre.get('gold_oz',{}).get('p',0):.0f}$ ({comm_pre.get('gold_oz',{}).get('c',0):+.2f}%) -> Managem/SMI\n"
+        f"Argent/oz: {comm_pre.get('silver_oz',{}).get('p',0):.2f}$ ({comm_pre.get('silver_oz',{}).get('c',0):+.2f}%) -> SMI Bou Azzer\n"
+        f"Cuivre: {comm_pre.get('copper',{}).get('c',0):+.2f}% | Phosphate: {comm_pre.get('phosphate',{}).get('c',0):+.2f}% -> OCP\n"
+        f"News mines Maroc: {comm_pre.get('news_or',[])}\n"
+        f"Office des Changes: {odc_pre.get('news',[])}\n"
             f"BAM/Politique monetaire: {bkam.get('bam_news',[])}\n"
             f"Inflation Maroc: {bkam.get('inflation_news',[])}\n"
             f"BDT/Bons Tresor: {bkam.get('bdt_news',[])}\n"
@@ -1354,6 +1380,243 @@ def brief_ouverture():
             f"<div style='background:#0A0D14;color:#E8E4D6;padding:20px;font-family:monospace'>"
             f"<h2 style='color:#C9A84C'>BRIEF OUVERTURE {datetime.datetime.now().strftime('%d/%m/%Y %H:%M')}</h2>"
             f"<p style='color:#FF4560'>{str(e)[:300]}</p></div>")
+
+# ─── COMMODITES MAROC & METAUX PRECIEUX ──────────────────────────────────────
+def get_commodities_maroc():
+    """Prix matieres premieres liees a la production marocaine"""
+    c = {}
+    symbols = {
+        "gold_oz":"xauusd","silver_oz":"xagusd","zinc":"zs.f",
+        "lead":"pb.f","copper":"hg.f","phosphate":"mos.us",
+    }
+    for name, sym in symbols.items():
+        c[name] = _stooq(sym)
+        time.sleep(0.2)
+    c["news_or"]    = gnews("or gold prix production mines Maroc Managem 2026", 3)
+    c["news_argent"]= gnews("argent silver SMI Bou Azzer Maroc 2026", 2)
+    c["news_phos"]  = gnews("phosphate OCP Maroc prix export 2026", 3)
+    return c
+
+def get_office_changes():
+    """Veille Office des Changes Maroc reserves transferts IDE"""
+    data = {"pubs":[], "news":[]}
+    try:
+        from bs4 import BeautifulSoup
+        r = requests.get("https://www.officedeschnages.ma/fr/statistiques",
+                         headers=HEADERS, **R)
+        if r.status_code == 200:
+            soup = BeautifulSoup(r.text,"html.parser")
+            for link in soup.find_all("a", href=True)[:20]:
+                t = link.get_text(strip=True)
+                h = link["href"]
+                if len(t)>10 and any(k in t.lower() for k in ["reserve","transfert","ide","balance","exportation"]):
+                    data["pubs"].append({"title":t[:150],"url":h})
+    except: pass
+    data["news"] = gnews("Office des Changes Maroc reserves devises 2026", 3)
+    data["bkam_reserves"] = gnews("BAM Bank Al Maghrib reserves devises changes 2026", 2)
+    return data
+
+def get_historical_poc(ticker, bvc_info):
+    """
+    Point of Control (POC) : cours ou est passe le plus de volume sur 1 mois.
+    Utilise stooq historique BVC si disponible. Fallback VWAP estime.
+    """
+    poc = {"price": 0, "method": "estimation", "note": ""}
+    try:
+        d1 = (datetime.date.today() - datetime.timedelta(days=30)).strftime("%Y%m%d")
+        d2 = datetime.date.today().strftime("%Y%m%d")
+        r = requests.get(
+            f"https://stooq.com/q/d/l/?s={ticker.lower()}.ma&i=d&d1={d1}&d2={d2}",
+            headers=HEADERS, **R
+        )
+        if r.status_code == 200 and len(r.text) > 100:
+            lines = r.text.strip().splitlines()[1:]
+            if len(lines) >= 5:
+                prices, volumes = [], []
+                for line in lines:
+                    parts = line.split(",")
+                    if len(parts) >= 6:
+                        try:
+                            cl = float(parts[4])
+                            vl = float(parts[5]) if parts[5] else 0
+                            if cl > 0: prices.append(cl); volumes.append(vl)
+                        except: pass
+                if prices and sum(volumes) > 0:
+                    poc_price = sum(p*v for p,v in zip(prices,volumes)) / sum(volumes)
+                    poc["price"]  = round(poc_price, 2)
+                    poc["method"] = "VWAP 30j"
+                    poc["high"]   = round(max(prices),2)
+                    poc["low"]    = round(min(prices),2)
+                    poc["note"]   = f"Sur {len(prices)} seances"
+                    return poc
+    except: pass
+    poc["note"] = "stooq indisponible"
+    return poc
+
+def detect_intraday_patterns(d, info):
+    """
+    Patterns intraday pour trades buy/sell dans la journee.
+    Retourne patterns detectes + strategies concretes.
+    """
+    patterns, strategies = [], []
+    close = d.get("close",0); open_ = d.get("open",0)
+    high  = d.get("high",0);  low   = d.get("low",0)
+    rsi   = d.get("rsi",50);  ema20 = d.get("ema20",0)
+    vol   = d.get("volume",0)
+    avg   = d.get("avg90",0) or info.get("v",1)
+
+    if not close or not open_: return patterns, strategies
+
+    range_day = high - low if high > low else 0.001
+    body      = abs(close - open_)
+    body_pct  = body / range_day
+    wick_low  = min(open_,close) - low
+    wick_high = high - max(open_,close)
+    mid       = (high + low) / 2
+
+    # Patterns bougies japonaises
+    if wick_low/range_day > 0.6 and body_pct < 0.3:
+        patterns.append("Marteau - Signal ACHAT")
+        strategies.append(f"Entree > {close:.2f} | Stop < {low:.2f} | Cible {round(close+(high-low),2):.2f}")
+
+    if wick_high/range_day > 0.6 and body_pct < 0.3:
+        patterns.append("Etoile filante - Signal VENTE")
+        strategies.append(f"Vente < {close:.2f} | Stop > {high:.2f} | Cible {round(close-(high-low),2):.2f}")
+
+    if body_pct < 0.1:
+        patterns.append("Doji - Indecision, attendre confirmation")
+
+    if close > open_ and body_pct > 0.8:
+        patterns.append("Marubozu haussier - Momentum fort ACHAT")
+        strategies.append(f"Hold/Renforcer si maintient > {open_:.2f}")
+
+    if close < open_ and body_pct > 0.8:
+        patterns.append("Marubozu baissier - Momentum fort VENTE")
+        strategies.append(f"Sortir/Vendre si casse < {close:.2f}")
+
+    # Opening Range Breakout
+    if close > mid and rsi < 65 and vol > avg*1.2:
+        strategies.append(f"ORB Haussier: achat si depasse {high:.2f} vol>{int(avg*1.3):,}")
+    elif close < mid and rsi > 35 and vol > avg*1.2:
+        strategies.append(f"ORB Baissier: vente si casse {low:.2f} vol>{int(avg*1.3):,}")
+
+    # Pullback EMA20
+    if ema20>0 and abs(close-ema20)/ema20 < 0.006:
+        strategies.append(f"Pullback EMA20 ({ema20:.2f}) - Zone entree precise")
+
+    return patterns[:3], strategies[:3]
+
+def get_vip_fundamental(ticker, ammc_pubs):
+    """Analyse fondamentale pour les titres VIP"""
+    return {
+        "ammc": ammc_for(ticker, ammc_pubs),
+        "news": gnews(f"{BVC.get(ticker,{}).get('n',ticker)} Maroc resultats 2026", 3),
+        "news_secteur": gnews(f"{BVC.get(ticker,{}).get('s','')} Maroc 2026", 2),
+    }
+
+def build_vip_zoom_html(ticker, d, macro, ammc_pubs, commodities=None):
+    """Bloc HTML zoom approfondi pour un titre VIP"""
+    if not d or not d.get("close"):
+        return f'<div style="background:#171C2C;border-radius:8px;padding:10px;margin-bottom:8px;border-left:3px solid #4B5563"><span style="color:#6B7280">{ticker} - donnees indisponibles</span></div>'
+
+    info  = BVC.get(ticker, {})
+    close = d.get("close",0);  rsi   = d.get("rsi",50)
+    vol   = d.get("volume",0); avg   = d.get("avg90",0) or d.get("avg30",0) or info.get("v",1)
+    chg   = d.get("change",0); ema20 = d.get("ema20",0)
+    ema200= d.get("ema200",0); high  = d.get("high",0);  low = d.get("low",0)
+    vr    = round(vol/avg,1) if avg>0 else 0
+    sc    = score(d, info, macro)
+
+    patterns, strategies = detect_intraday_patterns(d, info)
+    poc   = get_historical_poc(ticker, info)
+    fund  = get_vip_fundamental(ticker, ammc_pubs)
+
+    sig_col = "#00C87A" if sc>=70 else ("#FF4560" if sc<=35 else "#C9A84C")
+    sig_txt = "ACHAT" if sc>=70 else ("VENTE" if sc<=35 else "NEUTRE")
+    chg_col = "#00C87A" if chg>=0 else "#FF4560"
+
+    # POC section
+    poc_html = ""
+    if poc.get("price",0) > 0:
+        dist = round((close-poc["price"])/poc["price"]*100,1)
+        dist_col = "#00C87A" if dist>=0 else "#FF4560"
+        poc_html = (
+            f'<div style="background:rgba(139,92,246,.08);border:1px solid rgba(139,92,246,.2);border-radius:6px;padding:8px;margin:6px 0">'
+            f'<div style="font-size:9px;color:#8B5CF6;margin-bottom:4px;letter-spacing:2px">POC - COURS LE PLUS TRADE (30j)</div>'
+            f'<div style="font-size:13px;color:#E8E4D6;font-weight:700">{poc["price"]:.2f} MAD '
+            f'<span style="font-size:10px;color:{dist_col}">({dist:+.1f}% vs POC)</span></div>'
+            f'<div style="font-size:9px;color:#6B7280;margin-top:2px">{poc.get("note","")} | {poc.get("low",0):.2f} - {poc.get("high",0):.2f}</div>'
+            f'</div>'
+        )
+
+    # Patterns
+    pat_html = "".join(f'<div style="font-size:11px;color:#F59E0B;padding:2px 0">{p}</div>' for p in patterns)
+    if pat_html:
+        pat_html = f'<div style="margin:4px 0">{pat_html}</div>'
+
+    # Strategies intraday
+    strat_html = ""
+    if strategies:
+        strat_html = (
+            f'<div style="background:rgba(245,158,11,.06);border-radius:5px;padding:7px;margin:5px 0">'
+            f'<div style="font-size:9px;color:#F59E0B;margin-bottom:4px;letter-spacing:2px">TRADES INTRADAY</div>'
+            + "".join(f'<div style="font-size:11px;color:#9CA3AF;padding:1px 0">. {s}</div>' for s in strategies)
+            + f'</div>'
+        )
+
+    # Commodites
+    comm_html = ""
+    if commodities and info.get("s") == "Mines":
+        if ticker in ["MANAGEM","CMT"]:
+            go  = commodities.get("gold_oz",{})
+            cop = commodities.get("copper",{})
+            go_col  = "#00C87A" if go.get("c",0)>=0 else "#FF4560"
+            cop_col = "#00C87A" if cop.get("c",0)>=0 else "#FF4560"
+            comm_html = (f'<div style="font-size:10px;color:#6B7280;padding:3px 0">'
+                        f'Or: <span style="color:{go_col};font-weight:700">{go.get("p",0):.0f}$ ({go.get("c",0):+.2f}%)</span> | '
+                        f'Cuivre: <span style="color:{cop_col}">{cop.get("c",0):+.2f}%</span></div>')
+        elif ticker == "SMI":
+            ag  = commodities.get("silver_oz",{})
+            ag_col = "#00C87A" if ag.get("c",0)>=0 else "#FF4560"
+            comm_html = (f'<div style="font-size:10px;color:#6B7280;padding:3px 0">'
+                        f'Argent: <span style="color:{ag_col};font-weight:700">{ag.get("p",0):.2f}$ ({ag.get("c",0):+.2f}%)</span></div>')
+
+    # News + AMMC
+    news_html = "".join(
+        f'<div style="font-size:10px;color:#9CA3AF;padding:2px 0;border-bottom:1px solid rgba(255,255,255,.04)">. {n[:100]}</div>'
+        for n in fund["news"][:2]
+    )
+    ammc_html2 = "".join(
+        f'<div style="font-size:10px;color:#60A5FA;padding:2px 0">. {p["title"][:90]}</div>'
+        for p in fund["ammc"][:2]
+    )
+
+    macd_col = "#00C87A" if d.get("macd",0)>d.get("macd_s",0) else "#FF4560"
+    macd_dir = "Haussier" if d.get("macd",0)>d.get("macd_s",0) else "Baissier"
+    ema200_col = "#00C87A" if close>ema200>0 else "#FF4560"
+
+    return (
+        f'<div style="background:#171C2C;border-radius:10px;padding:14px;margin-bottom:10px;border-left:4px solid {sig_col}">'
+        f'<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px">'
+        f'<div><div style="font-size:18px;font-weight:900;color:{sig_col};font-family:monospace">{ticker}</div>'
+        f'<div style="font-size:10px;color:#6B7280">{info.get("n","")} - {info.get("s","")}</div></div>'
+        f'<div style="text-align:right">'
+        f'<div style="font-size:16px;font-weight:900;color:#E8E4D6">{close:.2f} MAD</div>'
+        f'<div style="font-size:11px;color:{chg_col}">{chg:+.2f}% | Vol x{vr}</div>'
+        f'<div style="background:{sig_col}20;color:{sig_col};border:1px solid {sig_col}40;font-size:9px;padding:2px 8px;border-radius:4px;margin-top:2px">{sig_txt} {sc}/100</div>'
+        f'</div></div>'
+        f'<div style="display:flex;gap:10px;font-size:10px;flex-wrap:wrap;margin-bottom:6px">'
+        f'<span style="color:#6B7280">RSI <strong style="color:{"#00C87A" if rsi<35 else "#FF4560" if rsi>70 else "#C9A84C"}">{rsi:.0f}</strong></span>'
+        f'<span style="color:#6B7280">MACD <strong style="color:{macd_col}">{macd_dir}</strong></span>'
+        f'<span style="color:#6B7280">EMA20 <strong style="color:{"#00C87A" if close>ema20>0 else "#FF4560"}">{ema20:.2f}</strong></span>'
+        f'<span style="color:#6B7280">EMA200 <strong style="color:{ema200_col}">{">" if close>ema200>0 else "<"}</strong></span>'
+        f'<span style="color:#6B7280">H:{high:.2f} B:{low:.2f}</span></div>'
+        f'{comm_html}{poc_html}{pat_html}{strat_html}'
+        + (f'<div style="font-size:9px;color:#60A5FA;margin-bottom:3px;letter-spacing:2px">AMMC</div>{ammc_html2}' if ammc_html2 else "")
+        + (f'<div style="font-size:9px;color:#6B7280;margin-top:4px;letter-spacing:2px">NEWS</div>{news_html}' if news_html else "")
+        + f'</div>'
+    )
+
 
 def _render_pdf_financials(pf):
     """Render AMMC financial data HTML"""
@@ -1640,6 +1903,74 @@ Français. Style trader hedge fund."""
         <div class="ft">Prochaine analyse : 15h30 — Smart Money & Paris Demain<br>
 <strong class="go">Max 3 trades/jour — Kelly Criterion — Confirmez manuellement</strong></div>
 </div></body></html>"""
+
+        # ══════════════════════════════════════════════════════════════════
+        # ZOOM VIP QUOTIDIEN — Analyse approfondie des titres suivis
+        # ══════════════════════════════════════════════════════════════════
+        print("[BARAKA] Zoom VIP quotidien en cours...")
+        commodities = get_commodities_maroc()
+        odc         = get_office_changes()
+
+        vip_cards_html = ""
+        for vip_t in VIP_TICKERS:
+            vip_d = bvc.get(vip_t)
+            if vip_d:
+                vip_cards_html += build_vip_zoom_html(vip_t, vip_d, macro, ammc, commodities)
+
+        # Section commodites Maroc
+        go   = commodities.get("gold_oz",{})
+        ag   = commodities.get("silver_oz",{})
+        zn   = commodities.get("zinc",{})
+        cu   = commodities.get("copper",{})
+        ph   = commodities.get("phosphate",{})
+        go_c  = go.get("c",0);  ag_c = ag.get("c",0)
+        zn_c  = zn.get("c",0);  cu_c = cu.get("c",0)
+
+        def cc(v): return "#00C87A" if v>=0 else "#FF4560"
+
+        comm_section = f"""
+        <div class="sec" style="border-color:rgba(245,158,11,.3)">
+          <div class="t" style="color:#F59E0B">MATIERES PREMIERES MAROC</div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap">
+            <div class="mb"><div class="ml">OR/oz</div><div class="mv" style="color:{cc(go_c)}">{go.get("p",0):.0f}$<br><span style="font-size:10px">{go_c:+.2f}%</span></div></div>
+            <div class="mb"><div class="ml">ARGENT/oz</div><div class="mv" style="color:{cc(ag_c)}">{ag.get("p",0):.2f}$<br><span style="font-size:10px">{ag_c:+.2f}%</span></div></div>
+            <div class="mb"><div class="ml">ZINC</div><div class="mv" style="color:{cc(zn_c)}">{zn_c:+.2f}%</div></div>
+            <div class="mb"><div class="ml">CUIVRE</div><div class="mv" style="color:{cc(cu_c)}">{cu_c:+.2f}%</div></div>
+            <div class="mb"><div class="ml">PHOSPHATE</div><div class="mv" style="color:{cc(ph.get("c",0))}">{ph.get("c",0):+.2f}%</div></div>
+          </div>
+          {"".join(f'<div class="ni"><span class="src" style="color:#F59E0B">MINES</span>{n}</div>' for n in (commodities.get("news_or",[]) + commodities.get("news_argent",[]))[:3])}
+          {"".join(f'<div class="ni"><span class="src" style="color:#C9A84C">PHOS</span>{n}</div>' for n in commodities.get("news_phos",[])[:2])}
+        </div>"""
+
+        odc_html = ""
+        if odc.get("pubs") or odc.get("news"):
+            odc_html = (
+                '<div class="sec"><div class="t">OFFICE DES CHANGES MAROC</div>'
+                + "".join(f'<div class="ni"><span class="src b">ODC</span>{p["title"]}</div>' for p in odc.get("pubs",[])[:3])
+                + "".join(f'<div class="ni"><span class="src b">ODC</span>{n}</div>' for n in odc.get("news",[])[:2])
+                + "".join(f'<div class="ni"><span class="src go">BAM</span>{n}</div>' for n in odc.get("bkam_reserves",[])[:2])
+                + "</div>"
+            )
+
+        # Email ZOOM VIP séparé
+        zoom_html = f"""<!DOCTYPE html><html><head><meta charset="UTF-8">{CSS}</head>
+<body><div class="w">
+<div class="hdr">
+  <div class="logo">BARAKA</div>
+  <div class="sub">ZOOM VIP QUOTIDIEN - {now}</div>
+  <span class="bdg" style="color:#F59E0B;border-color:rgba(245,158,11,.3);background:rgba(245,158,11,.1)">
+    {len([t for t in VIP_TICKERS if bvc.get(t)])} TITRES SUIVIS EN PROFONDEUR
+  </span>
+</div>
+{comm_section}
+{odc_html}
+<div style="font-size:10px;color:#C9A84C;letter-spacing:3px;text-transform:uppercase;margin-bottom:10px">ANALYSE APPROFONDIE - TECHNIQUE + INTRADAY + POC + AMMC</div>
+{vip_cards_html if vip_cards_html else '<div style="color:#6B7280;padding:20px">Donnees TV indisponibles pour les titres VIP</div>'}
+<div class="ft">Zoom VIP quotidien - Baraka Elite Max<br>
+<strong class="go">POC = cours le plus trade sur 30j - Reference Smart Money</strong></div>
+</div></body></html>"""
+
+        send_email("BARAKA - ZOOM VIP QUOTIDIEN 12h00", zoom_html)
 
         send_email("BARAKA — ANALYSE + ENTRÉES 12h00", html)
 
