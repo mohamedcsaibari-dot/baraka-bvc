@@ -1856,7 +1856,7 @@ Français. Style trader hedge fund."""
             cards = '<div style="text-align:center;padding:20px;color:#6B7280">Aucun signal qualifié ce matin — attendre confirmation.</div>'
 
         # Momentum sectoriel
-        sector_momentum = calculate_sector_momentum(bvc_data, macro)
+        sector_momentum = calculate_sector_momentum(bvc, macro)
 
         # Volumes anormaux
         sm_html = ""
