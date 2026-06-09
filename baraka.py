@@ -1183,7 +1183,8 @@ def brief_ouverture():
             pre_analysis    = cached.get("deep_analysis","")
             sector_analysis = cached.get("sector_analysis","")
             cached_time     = cached.get("timestamp","")
-        else:
+            comm_pre        = cached.get("commodities", {})
+            odc_pre         = cached.get("odc", {})
             print("[BRIEF] Collecte en direct (pas de cache)")
             macro  = get_macro()
             ammc   = get_ammc_pubs()
@@ -1202,6 +1203,8 @@ def brief_ouverture():
             pre_analysis    = ""
             sector_analysis = ""
             cached_time     = ""
+            comm_pre        = get_commodities_maroc()
+            odc_pre         = get_office_changes()
 
         sp_c = macro.get("sp500",{}).get("c",0)
         cac_c = macro.get("cac40",{}).get("c",0)
