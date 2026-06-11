@@ -138,23 +138,50 @@ def fetch_stooq(sym):
         except: continue
     return {"p": 0, "c": 0}
 
+def _fred_series(series_id):
+    """Recupere la derniere valeur valide depuis FRED (ignore les points manquants)"""
+    try:
+        r = requests.get(
+            f"https://fred.stlouisfed.org/graph/fredgraph.csv?id={series_id}",
+            headers=HDR, **R
+        )
+        curr = prev = 0.0
+        for line in reversed(r.text.strip().splitlines()):
+            parts = line.split(",")
+            if len(parts) < 2: continue
+            try:
+                val = float(parts[1])
+                if curr == 0.0: curr = val
+                elif prev == 0.0: prev = val; break
+            except: continue
+        return {"curr": curr, "prev": prev,
+                "chg": round((curr-prev)/prev*100,2) if prev > 0 else 0.0}
+    except: return {"curr":0,"prev":0,"chg":0}
+
 def get_macro():
-    """Donnees macro completes avec sources fiables"""
+    """Donnees macro completes - FRED (taux) + ExchangeRate (devises) + News (indices)"""
     m = {}
 
-    # FRED: taux US fiables
-    for k, s in [("us10y","DGS10"),("us2y","DGS2"),("fed_rate","FEDFUNDS"),("us_cpi","CPIAUCSL")]:
-        try:
-            r = requests.get(f"https://fred.stlouisfed.org/graph/fredgraph.csv?id={s}", headers=HDR, **R)
-            lines = [l for l in r.text.strip().splitlines() if "." in l.split(",")[-1]]
-            if lines: m[k] = float(lines[-1].split(",")[1])
-            else: m[k] = 0
-        except: m[k] = 0
+    # FRED taux (confirmes fonctionnels sur Railway)
+    for k, sid in [("us10y","DGS10"),("us2y","DGS2"),("fed_rate","FEDFUNDS"),
+                   ("gold_fix","GOLDAMGBD228NLBM"),("brent_usd","DCOILBRENTEU"),
+                   ("wti_usd","DCOILWTICO"),("vix_idx","VIXCLS"),("sp500_idx","SP500")]:
+        d = _fred_series(sid)
+        m[k] = d["curr"]
+        if k in ["gold_fix","brent_usd","wti_usd","vix_idx","sp500_idx"]:
+            m[f"{k}_chg"] = d["chg"]
 
-    m["yield_spread"] = round(m.get("us10y",0) - m.get("us2y",0), 3)
+    m["yield_spread"]   = round(m.get("us10y",0) - m.get("us2y",0), 3)
     m["recession_risk"] = m["yield_spread"] < 0
 
-    # Change rates
+    # Wrapper marches sous format standardise {"p":prix,"c":chg%}
+    m["gold"]       = {"p": m.get("gold_fix",0),   "c": m.get("gold_fix_chg",0)}
+    m["brent"]      = {"p": m.get("brent_usd",0),  "c": m.get("brent_usd_chg",0)}
+    m["wti"]        = {"p": m.get("wti_usd",0),    "c": m.get("wti_usd_chg",0)}
+    m["vix"]        = {"p": m.get("vix_idx",20),   "c": m.get("vix_idx_chg",0)}
+    m["sp500"]      = {"p": m.get("sp500_idx",0),  "c": m.get("sp500_idx_chg",0)}
+
+    # Devises (confirme fonctionnel)
     try:
         r = requests.get("https://open.er-api.com/v6/latest/USD", headers=HDR, **R)
         d = r.json().get("rates",{})
@@ -164,16 +191,12 @@ def get_macro():
         m["gbp_mad"] = round(m["usd_mad"] * float(d.get("GBP",0.79)), 4)
     except: m.update({"usd_mad":10.0,"eur_usd":1.08,"eur_mad":10.9,"gbp_mad":12.5})
 
-    # Indices mondiaux via stooq
-    INDEX_MAP = {
-        "sp500":"^spx","nasdaq":"^ndq","cac40":"^cac","dax":"^dax",
-        "ftse":"^ukx","nikkei":"^nkx","shanghai":"^shc","hsi":"^hsi",
-        "gold":"xauusd","silver":"xagusd","brent":"brent.f","wti":"cl.f",
-        "copper":"hg.f","phosphate":"mos.us","dxy":"dxy.f","vix":"^vix",
-    }
-    for name, sym in INDEX_MAP.items():
+    # Indices (stooq tente, fallback 0)
+    for name, sym in [("nasdaq","^ndq"),("cac40","^cac"),("dax","^dax"),
+                      ("ftse","^ukx"),("nikkei","^nkx"),("shanghai","^shc"),
+                      ("silver","xagusd"),("copper","hg.f"),("phosphate","mos.us"),("dxy","dxy.f")]:
         m[name] = fetch_stooq(sym)
-        time.sleep(0.15)
+        time.sleep(0.1)
 
     return m
 
@@ -250,37 +273,52 @@ def gnews(q, n=4):
 
 def get_geopolitical_scanner():
     """
-    Scanner geopolitique - detecte les evenements mondiaux avec impact Maroc.
-    Couvre: Moyen Orient, USA, Europe, Chine, Russie, commodites, devises.
+    Scanner geopolitique - requetes courtes pour maximiser les resultats.
+    Detection crise: Iran/USA, Ukraine, Fed, Maroc.
     """
     geo = {}
 
-    # Conflits & tensions militaires
-    geo["moyen_orient"] = gnews("Iran Israel guerre conflit Moyen Orient 2026", 4)
-    geo["ukraine"]      = gnews("Ukraine Russie guerre petrole gaz 2026", 3)
-    geo["usa_chine"]    = gnews("USA Chine tension commerce Taiwan 2026", 3)
-    geo["afrique"]      = gnews("Afrique instabilite economique Maroc 2026", 2)
-
-    # Macro & banques centrales
-    geo["fed"]          = gnews("Federal Reserve inflation taux USA 2026", 4)
-    geo["bce"]          = gnews("BCE taux directeur zone euro recession 2026", 3)
-    geo["bkam"]         = gnews("Bank Al Maghrib BAM taux directeur Maroc 2026", 3)
-
-    # Maroc direct
-    geo["maroc_eco"]    = gnews("Maroc economie croissance exportations 2026", 4)
-    geo["maroc_fin"]    = gnews("Maroc bourse MASI investissement 2026", 3)
-    geo["maroc_social"] = gnews("Maroc inflation salaires consommation 2026", 3)
-
-    # Commodites Maroc
-    geo["petrole"]      = gnews("petrole OPEC prix Brent impact inflation 2026", 3)
-    geo["phosphate"]    = gnews("phosphate OCP Maroc prix export demande 2026", 3)
-    geo["or_argent"]    = gnews("or argent mines prix Managem SMI 2026", 3)
-
-    # Partenaires commerciaux Maroc
-    geo["france"]       = gnews("France economie exportations Maroc 2026", 2)
-    geo["espagne"]      = gnews("Espagne economie Maroc tourisme 2026", 2)
+    # Requetes courtes = meilleurs resultats Google News
+    geo["iran_usa"]     = gnews("Iran USA conflit frappe 2026", 4)
+    geo["israel"]       = gnews("Israel Gaza frappe attaque 2026", 3)
+    geo["ukraine"]      = gnews("Ukraine Russie guerre frappe 2026", 3)
+    geo["usa_chine"]    = gnews("USA Chine tensions Taiwan 2026", 3)
+    geo["fed"]          = gnews("Fed Reserve taux inflation USA 2026", 4)
+    geo["bce"]          = gnews("BCE taux Euro recession 2026", 3)
+    geo["petrole_opec"] = gnews("petrole OPEC Brent prix chute hausse 2026", 4)
+    geo["marche_chute"] = gnews("bourse chute crash Wall Street 2026", 3)
+    geo["maroc_bvc"]    = gnews("Maroc bourse MASI economie 2026", 4)
+    geo["maroc_bam"]    = gnews("BAM Maroc taux directeur 2026", 3)
+    geo["phosphate"]    = gnews("phosphate OCP prix 2026", 3)
+    geo["or_mines"]     = gnews("or argent mines Managem 2026", 3)
+    geo["france_eco"]   = gnews("France CAC40 economie 2026", 2)
+    # News en anglais pour evenements majeurs
+    geo["world_crisis"] = gnews("Iran attack US military strike 2026", 3)
+    geo["gold_oil"]     = gnews("gold oil crash rally 2026", 3)
 
     return geo
+
+def detect_market_crisis(macro):
+    """
+    Detecte si les marches sont en crise basee sur les donnees disponibles.
+    Retourne une liste de signaux d alerte.
+    """
+    alerts = []
+    sp_c   = macro.get("sp500",{}).get("c",0)
+    brent_c= macro.get("brent",{}).get("c",0)
+    gold_c = macro.get("gold",{}).get("c",0)
+    vix_p  = macro.get("vix",{}).get("p",20)
+
+    if sp_c < -1: alerts.append(f"S&P500 {sp_c:.2f}% EN FORTE BAISSE")
+    if sp_c < -0.5: alerts.append(f"S&P500 {sp_c:.2f}% en baisse")
+    if brent_c > 3: alerts.append(f"BRENT +{brent_c:.2f}% CHOC PETROLIER")
+    if brent_c < -3: alerts.append(f"Brent {brent_c:.2f}% effondrement")
+    if gold_c < -1.5: alerts.append(f"OR {gold_c:.2f}% VENTE FORCEE (deleveraging)")
+    if gold_c > 2: alerts.append(f"OR +{gold_c:.2f}% REFUGE - risk off fort")
+    if vix_p > 25: alerts.append(f"VIX={vix_p:.0f} PANIQUE - risk off")
+    if vix_p > 35: alerts.append(f"VIX={vix_p:.0f} CRASH EN COURS")
+
+    return alerts
 
 def get_maroc_social_media():
     """Intelligence sociale - Telegram, news marocaines, forums traders"""
@@ -766,19 +804,20 @@ def render_reco_card(rec, macro=None):
         elif sect == "Banque": macro_ctx = f"CAC40 {macro.get('cac40',{}).get('c',0):+.2f}%, Spread {macro.get('yield_spread',0):+.3f}%"
         else: macro_ctx = f"CAC40 {macro.get('cac40',{}).get('c',0):+.2f}%, VIX {macro.get('vix',{}).get('p',20):.0f}"
 
-    groq_prompt = f"""Analyste hedge fund Maroc. Analyse concise en 2 phrases.
+    groq_prompt = f"""Analyste BVC hedge fund. Format BULLETS uniquement.
 
-TITRE: {t} - {info.get('n','')} ({info.get('s','')}) - Horizon {tf_label}
-SCORE: {sc}/100 | RSI={rsi:.0f} | MACD={macd_h} | Volume x{vr}
-COURS: {close:.2f} MAD | EMA20={ema20:.2f} | EMA200={ema200:.2f}
-MACRO: {macro_ctx}
+{t} | {info.get('s','')} | Score {sc}/100 | {tf_label}
+RSI={rsi:.0f} | MACD={macd_h} | Vol x{vr} | EMA200={"dessus" if close>ema200>0 else "dessous"}
+Cours={close:.2f} | EMA20={ema20:.2f} | ADX={d.get('adx',0):.0f}
+Macro: {macro_ctx}
 AMMC: {ammc_ctx}
-NEWS: {news_ctx}
-PATTERNS: {patterns}
+News: {news_ctx}
+Patterns: {patterns}
 
-Phrase 1: Catalyseur precis technique + macro + fondamental pour {label} maintenant
-Phrase 2: Condition exacte d entree et risque principal a surveiller
-Style: trader Goldman Sachs. Chiffres precis. Sans markdown."""
+REPONDRE EN 2 BULLETS MAX:
+• [ENTRER] catalyseur technique+macro+fondamental precis pour {label} maintenant
+• [RISQUE] condition exacte + niveau de sortie si scenario negatif
+1 ligne chacun. Chiffres precis. Pas de paragraphes."""
 
     analyse = groq_call(groq_prompt, 250) or "Setup technique confirme - alignement indicateurs."
 
@@ -910,7 +949,15 @@ Reponds en 6 paragraphes SANS markdown, style analyste professionnel:
 4. ARBITRAGE BDT VS ACTIONS: Ou vont les salles de marche ce matin? Taux BDT vs rendement attendu actions
 5. SECTEURS PRIORITAIRES: Les 3 secteurs a surveiller absolument a l'ouverture avec raisons precises
 6. AMMC ET FONDAMENTAUX: Publications du jour et leur impact sur les titres concernes
-Chiffres precis. Liens de causalite explicites. Niveau CFA hedge fund."""
+FORMAT OBLIGATOIRE - BULLETS UNIQUEMENT (pas de paragraphes):
+• [CRISE/OPPORTUNITE] Evenement + impact chiffre direct sur BVC
+• [MARCHES] Mouvement(s) nuit + correlation directe BVC (coefficient 0.7 France/Maroc)
+• [BRENT/INFLATION] Impact prix petrole sur cout vie Maroc + secteurs BVC touches
+• [OR/MINES] Impact or/argent sur Managem/SMI si mouvement > 0.5%
+• [BDT/ACTIONS] Arbitrage: taux BDT vs rendement actions ce matin
+• [AMMC] Alert publications: profit warning? resultats? impact titres?
+• [SECTEURS] Les 2-3 secteurs a privilegier/eviter avec raison en 5 mots
+Maximum 7 bullets. Chaque bullet 1 ligne max. Chiffres precis. Zero litterature."""
 
         deep_analysis = groq_call(deep_prompt, 1000)
 
@@ -966,6 +1013,9 @@ def brief_ouverture():
             sector_analysis = ""
             cached_time     = ""
 
+        # Detection crise marches
+        crisis_alerts = detect_market_crisis(macro)
+
         # Variables macro
         sp_c   = macro.get("sp500",{}).get("c",0)
         sp_p   = macro.get("sp500",{}).get("p",0)
@@ -1002,13 +1052,15 @@ def brief_ouverture():
                 f"Geo Moyen Orient: {geo.get('moyen_orient',[][:2])}\n"
                 f"Fed: {geo.get('fed',[][:2])}\n"
                 f"AMMC: {[a['title'][:60] for a in ammc[:4]]}\n"
-                "5 phrases trader hedge fund:\n"
-                "1. Evenement geopolitique le plus impactant pour la BVC aujourd'hui\n"
-                "2. Correlations marches mondiaux -> secteurs BVC specifiques\n"
-                "3. USD/MAD et Brent -> inflation Maroc -> arbitrage BDT vs actions\n"
-                "4. Secteurs a privilegier/eviter a l'ouverture\n"
-                "5. Publications AMMC et impact fondamental\n"
-                "Chiffres precis. Liens causaux. Sans markdown."
+                "FORMAT BULLETS UNIQUEMENT - pas de paragraphes:\n"
+                "• [GEO] evenement geopolitique du jour + impact BVC chiffre\n"
+                "• [MARCHES] indices nuit + correlation BVC directe\n"
+                "• [COMMODITES] or/brent/argent + impact Managem/SMI/OCP/CTM\n"
+                "• [MAD] USD/MAD impact importateurs vs exportateurs\n"
+                "• [BDT] arbitrage bons tresor vs actions ce matin\n"
+                "• [AMMC] publications: profit warning? alerte? signal?\n"
+                "• [SECTEUR] 2 secteurs prioritaires + raison 5 mots\n"
+                "7 bullets max. 1 ligne chacun. Chiffres precis. Zero litterature."
             )
             deep_analysis = groq_call(prompt, 700) or "Analyse en cours..."
 
@@ -1017,14 +1069,24 @@ def brief_ouverture():
             if not items: return ""
             return "".join(f'<div class="ni"><span class="src" style="background:rgba(239,68,68,.15);color:#EF4444">{src}</span>{n}</div>' for n in items[:limit])
 
+        # Alertes crise en tete
         geo_html = ""
-        if geo.get("moyen_orient"): geo_html += geo_items(geo["moyen_orient"][:3], "Iran/Israel")
+        if crisis_alerts:
+            geo_html += "".join(
+                f'<div class="imp"><span style="color:#FF4560;font-weight:900;font-size:12px">!!! {a}</span></div>'
+                for a in crisis_alerts
+            )
+
+        if geo.get("iran_usa"):     geo_html += geo_items(geo["iran_usa"][:3], "Iran/USA")
+        if geo.get("israel"):       geo_html += geo_items(geo["israel"][:2], "Israel")
         if geo.get("ukraine"):      geo_html += geo_items(geo["ukraine"][:2], "Ukraine")
+        if geo.get("world_crisis"): geo_html += geo_items(geo["world_crisis"][:2], "MONDE")
         if geo.get("usa_chine"):    geo_html += geo_items(geo["usa_chine"][:2], "US/Chine")
         if geo.get("fed"):          geo_html += geo_items(geo["fed"][:2], "Fed")
-        if geo.get("petrole"):      geo_html += geo_items(geo["petrole"][:2], "Petrole")
+        if geo.get("petrole_opec"): geo_html += geo_items(geo["petrole_opec"][:2], "Petrole")
+        if geo.get("gold_oil"):     geo_html += geo_items(geo["gold_oil"][:2], "Or/Petrole")
         if not geo_html:
-            geo_html = '<div class="ni" style="color:#4B5563">Scanner geopolitique - aucun evenement majeur detecte</div>'
+            geo_html = '<div class="ni" style="color:#4B5563">Aucun evenement majeur - marches calmes</div>'
 
         # Maroc HTML
         maroc_html = ""
@@ -1039,14 +1101,31 @@ def brief_ouverture():
             for s in social[:5]
         ) or '<div class="ni" style="color:#4B5563">Aucun buzz detecte</div>'
 
-        # AMMC HTML
-        ammc_html = "".join(
-            f'<div class="ni"><span class="src" style="background:rgba(239,68,68,.12);color:#EF4444">AMMC</span>'
-            f'{a["title"][:110]}'
-            + (f' <strong style="color:#C9A84C">[{a["ticker"]}]</strong>' if a.get("ticker") else "")
-            + '</div>'
-            for a in ammc[:6]
-        ) or '<div class="ni" style="color:#4B5563">Aucune publication aujourd\'hui</div>'
+        # AMMC HTML avec detection profit warning
+        def ammc_type(title):
+            t = title.upper()
+            if any(w in t for w in ["PROFIT WARNING","AVERTISSEMENT","REVISION","BAISSE RESULTATS","PERTE"]):
+                return ("#FF4560","🚨 PROFIT WARNING: ")
+            if any(w in t for w in ["DIVIDENDE","DISTRIBUTION"]):
+                return ("#00C87A","💰 DIVIDENDE: ")
+            if any(w in t for w in ["ACQUISITION","FUSION","OPA","RACHAT"]):
+                return ("#F59E0B","🏦 OPERATION: ")
+            if any(w in t for w in ["RESULTATS","CHIFFRE","CA","BENEFICE","BILAN"]):
+                return ("#60A5FA","📊 RESULTATS: ")
+            return ("#EF4444","")
+
+        ammc_html = ""
+        for a in ammc[:8]:
+            col_a, prefix_a = ammc_type(a["title"])
+            ammc_html += (
+                f'<div class="ni"><span class="src" style="background:{col_a}18;color:{col_a}">AMMC</span>'
+                f'<span style="color:{col_a};font-weight:{"900" if prefix_a else "400"}">{prefix_a}</span>'
+                f'{a["title"][:110]}'
+                + (f' <strong style="color:#C9A84C">[{a["ticker"]}]</strong>' if a.get("ticker") else "")
+                + '</div>'
+            )
+        if not ammc_html:
+            ammc_html = '<div class="ni" style="color:#4B5563">Aucune publication aujourd\'hui</div>'
 
         # BourseNews HTML
         bn_html = "".join(
@@ -1156,10 +1235,12 @@ def brief_ouverture():
 def analyse_entrees():
     print("[BARAKA] === ANALYSE + ENTREES 12h00 ===")
     try:
-        bvc_data = get_bvc_data()
-        macro    = get_macro()
+        bvc_data  = get_bvc_data()
+        macro     = get_macro()
         ammc_pubs = get_ammc_pubs()
-        now      = datetime.datetime.now().strftime("%d/%m/%Y %H:%M")
+        geo       = get_geopolitical_scanner()
+        now       = datetime.datetime.now().strftime("%d/%m/%Y %H:%M")
+        crisis_alerts = detect_market_crisis(macro)
 
         if not bvc_data:
             send_email("BARAKA — ANALYSE 12h00",
@@ -1265,7 +1346,17 @@ def analyse_entrees():
         )
 
         sp_c = macro.get("sp500",{}).get("c",0)
+        brent_c = macro.get("brent",{}).get("c",0)
+        gold_c  = macro.get("gold",{}).get("c",0)
         mad  = macro.get("usd_mad",10.0)
+
+        # Banniere crise si marches en mouvement
+        crisis_banner = ""
+        if crisis_alerts:
+            crisis_banner = '<div class="geo"><div class="geot">ALERTE MARCHES EN COURS</div>' + "".join(
+                f'<div class="imp"><span style="color:#FF4560;font-weight:900">!!! {a}</span></div>'
+                for a in crisis_alerts
+            ) + '</div>'
 
         html = f"""<!DOCTYPE html><html><head><meta charset="UTF-8">{CSS}</head>
 <body><div class="w">
@@ -1284,6 +1375,7 @@ def analyse_entrees():
   <div class="mb" style="flex:1"><div class="ml">Titres</div><div class="mv go">{len(bvc_data)}/32</div></div>
 </div>
 
+{crisis_banner}
 {sm_html}
 
 {reco_section(reco_day, "TRADES INTRADAY — AUJOURD'HUI", "⚡", "#60A5FA")}
@@ -1352,13 +1444,14 @@ def post_cloture():
             f"MACRO: CAC40={cac_c:+.2f}% | Brent={brent_c:+.2f}% | Or={gold_c:+.2f}% | USD/MAD={mad}\n"
             f"GEO: {geo.get('moyen_orient',[][:2])}\n"
             f"GEO: {geo.get('fed',[][:1])}\n\n"
-            "5 phrases trader hedge fund:\n"
-            "1. Ou est alle le smart money aujourd'hui et POURQUOI (lien avec macro/geo du jour)\n"
-            "2. Arbitrage: les salles de marche ont-elles bascule sur les BDT Maroc? Signaux observes\n"
-            "3. Evenement geopolitique ou macro qui va driver la BVC demain matin\n"
-            "4. Les 2 titres a surveiller ABSOLUMENT demain avec prix d'entree precis\n"
-            "5. Signal d'alarme: si ce scenario se realise demain = ne pas entrer\n"
-            "Chiffres precis. Liens causaux explicites. Sans markdown."
+            "FORMAT: BULLETS UNIQUEMENT:\n"
+            "• [SM] Ou est alle le smart money + raison (lien macro/geo)\n"
+            "• [BDT] Les salles ont-elles arbitre vers BDT? Signals observes\n"
+            "• [DEMAIN] 1 evenement macro/geo qui driveera la BVC demain matin\n"
+            "• [TRADE1] Titre A: entree X MAD, cible Y MAD, stop Z MAD\n"
+            "• [TRADE2] Titre B: entree X MAD, cible Y MAD, stop Z MAD\n"
+            "• [RISQUE] Si [scenario] se realise demain = ne pas entrer\n"
+            "Chiffres precis. 1 ligne par bullet. Pas de paragraphes."
         )
         synth = groq_call(prompt, 600) or "Analyse en cours..."
 
@@ -1461,6 +1554,139 @@ def post_cloture():
             f"<div style='background:#080C14;color:#E8E4D6;padding:20px;font-family:monospace'>"
             f"<h2 style='color:#C9A84C'>POST-CLOTURE {datetime.datetime.now().strftime('%d/%m/%Y %H:%M')}</h2>"
             f"<p style='color:#FF4560'>{str(e)[:300]}</p></div>")
+
+
+# ─── MARKET CRASH MONITOR ────────────────────────────────────────────────────────
+_MARKET_LEVELS = {}  # Previous levels for each index
+
+def monitor_markets():
+    """
+    Surveillance marches mondiaux toutes les 5 minutes.
+    Alerte si un indice depasse: -0.2%, -0.5%, -1%, +0.2%, +0.5%, +1%.
+    """
+    global _MARKET_LEVELS
+    try:
+        macro = get_macro()
+        markets = {
+            "SP500":  macro.get("sp500",{}),
+            "Brent":  macro.get("brent",{}),
+            "Or":     macro.get("gold",{}),
+            "VIX":    macro.get("vix",{}),
+        }
+        alerts = []
+        thresholds = [0.2, 0.5, 1.0, 2.0]
+
+        for name, d in markets.items():
+            if not d or not d.get("c"): continue
+            chg = d.get("c",0)
+            prev_chg = _MARKET_LEVELS.get(name, 0)
+
+            for thresh in thresholds:
+                # Franchissement seuil baisse
+                if chg <= -thresh and prev_chg > -thresh:
+                    alerts.append({
+                        "name":name,"chg":chg,"thresh":-thresh,
+                        "msg":f"ALERTE: {name} passe sous -{thresh}% ({chg:.2f}%)",
+                        "color":"#FF4560","critical": thresh >= 1
+                    })
+                    break
+                # Franchissement seuil hausse
+                elif chg >= thresh and prev_chg < thresh:
+                    alerts.append({
+                        "name":name,"chg":chg,"thresh":thresh,
+                        "msg":f"SIGNAL: {name} depasse +{thresh}% ({chg:.2f}%)",
+                        "color":"#00C87A","critical": name == "Brent" and thresh >= 2
+                    })
+                    break
+                # Retour vers 0 depuis une zone negative
+                elif chg > -thresh*0.3 and prev_chg <= -thresh:
+                    alerts.append({
+                        "name":name,"chg":chg,"thresh":0,
+                        "msg":f"REBOND: {name} remonte a {chg:.2f}% (etait {prev_chg:.2f}%)",
+                        "color":"#F59E0B","critical":False
+                    })
+                    break
+
+            _MARKET_LEVELS[name] = chg
+
+        if alerts:
+            _send_market_alert(alerts, macro)
+
+    except Exception as e:
+        print(f"[MARKET MONITOR] {e}")
+
+def _send_market_alert(alerts, macro):
+    """Envoie une alerte email pour un mouvement de marche"""
+    now = datetime.datetime.now().strftime("%d/%m/%Y %H:%M")
+    has_critical = any(a["critical"] for a in alerts)
+    urg_col = "#FF4560" if has_critical else "#F59E0B"
+
+    alerts_html = ""
+    for a in alerts:
+        alerts_html += (
+            f'<div style="background:{a["color"]}12;border-left:4px solid {a["color"]};'
+            f'border-radius:6px;padding:12px;margin-bottom:8px">'
+            f'<div style="font-size:14px;font-weight:900;color:{a["color"]}">{a["msg"]}</div>'
+            f'</div>'
+        )
+
+    # Contexte BVC
+    sp_p  = macro.get("sp500",{}).get("p",0)
+    br_p  = macro.get("brent",{}).get("p",0)
+    go_p  = macro.get("gold",{}).get("p",0)
+    vix   = macro.get("vix",{}).get("p",20)
+    mad   = macro.get("usd_mad",10)
+
+    impact_html = ""
+    brent_c = macro.get("brent",{}).get("c",0)
+    gold_c  = macro.get("gold",{}).get("c",0)
+    sp_c    = macro.get("sp500",{}).get("c",0)
+
+    impacts = []
+    if brent_c > 2:
+        impacts.append(f"Brent +{brent_c:.1f}% → inflation Maroc → pression sur CTM, TMA, Agro")
+    if brent_c < -2:
+        impacts.append(f"Brent {brent_c:.1f}% → soulagement inflation → positif distribution/transport")
+    if gold_c < -1.5:
+        impacts.append(f"Or {gold_c:.1f}% → deleveraging → Managem/SMI sous pression")
+    if gold_c > 1.5:
+        impacts.append(f"Or +{gold_c:.1f}% → refuge → Managem/SMI en hausse")
+    if sp_c < -1:
+        impacts.append(f"SP500 {sp_c:.1f}% → risk off mondial → BVC ouvrira en baisse")
+        impacts.append(f"→ CAC40 correction attendue → correlation BVC/France 0.7")
+    if vix > 30:
+        impacts.append(f"VIX={vix:.0f} panique → flux vers BDT Maroc → sorties actions BVC")
+
+    impact_str = "".join(f'<div style="font-size:11px;color:#9CA3AF;padding:2px 0">• {i}</div>' for i in impacts)
+
+    html = (
+        f'<!DOCTYPE html><html><head><meta charset="UTF-8">{CSS}</head>'
+        f'<body><div class="w">'
+        f'<div class="hdr" style="border-color:{urg_col}60">'
+        f'<div class="logo">BARAKA</div>'
+        f'<div class="sub">ALERTE MARCHE — {now}</div>'
+        f'<span class="bdg" style="color:{urg_col};border-color:{urg_col}50">{"CRITIQUE" if has_critical else "SIGNAL IMPORTANT"}</span>'
+        f'</div>'
+        f'<div class="geo" style="border-color:{urg_col}50">'
+        f'<div class="geot">MOUVEMENTS DETECTES</div>'
+        f'{alerts_html}</div>'
+        f'<div class="sec"><div class="st">NIVEAUX EN TEMPS REEL</div>'
+        f'<div class="mg">'
+        f'<div class="mb"><div class="ml">SP500</div><div class="mv {c(sp_c)}">{sp_p:.0f}<br><span style="font-size:9px">{p(sp_c)}</span></div></div>'
+        f'<div class="mb"><div class="ml">BRENT</div><div class="mv {c(brent_c)}">{br_p:.1f}$<br><span style="font-size:9px">{p(brent_c)}</span></div></div>'
+        f'<div class="mb"><div class="ml">OR</div><div class="mv {c(gold_c)}">{go_p:.0f}$<br><span style="font-size:9px">{p(gold_c)}</span></div></div>'
+        f'<div class="mb"><div class="ml">VIX</div><div class="mv" style="color:{"#FF4560" if vix>25 else "#00C87A"}">{vix:.1f}</div></div>'
+        f'<div class="mb"><div class="ml">USD/MAD</div><div class="mv b">{mad}</div></div>'
+        f'</div></div>'
+        + (f'<div class="sec"><div class="st">IMPACT SUR LA BVC</div>{impact_str}</div>' if impacts else "")
+        + f'<div class="ft"><strong class="go">BARAKA v7.0 — Alerte Temps Reel</strong></div>'
+        f'</div></body></html>'
+    )
+
+    prefix = "CRITIQUE" if has_critical else "SIGNAL"
+    names = ", ".join(a["name"] for a in alerts[:2])
+    send_email(f"BARAKA — {prefix} MARCHE: {names}", html)
+    print(f"[MARKET ALERT] {[a['msg'] for a in alerts]}")
 
 
 # ─── SURVEILLANCE TRIGGERS ───────────────────────────────────────────────────────
@@ -1596,7 +1822,8 @@ def run_scheduler():
 |  07:30 UTC (08:30 Casa) -> Brief Ouverture             |
 |  11:00 UTC (12:00 Casa) -> Analyse + Recommandations   |
 |  14:30 UTC (15:30 Casa) -> Post-Cloture Smart Money   |
-|  /10 min (09-15 UTC)    -> Surveillance Triggers       |
+|  /5 min (6h-23h UTC)    -> Alerte Marches (-0.2/-0.5/-1%)|
+|  /10 min (09-15 UTC)   -> Surveillance Triggers BVC    |
 +======================================================+
     """)
 
@@ -1630,11 +1857,19 @@ def run_scheduler():
                     fired[f"cloture_{today}"] = True
                     threading.Thread(target=post_cloture, daemon=True).start()
 
+                # Surveillance triggers positions (10 min, heures marche BVC)
                 if 8 <= h < 15 and m % 10 == 0 and _WATCHLIST:
                     tkey = f"trigger_{today}_{h}_{m}"
                     if tkey not in fired:
                         fired[tkey] = True
                         threading.Thread(target=monitor_triggers, daemon=True).start()
+
+                # Surveillance marches mondiaux (5 min, 6h-23h UTC)
+                if 6 <= h < 23 and m % 5 == 0:
+                    mkey = f"mkt_{today}_{h}_{m}"
+                    if mkey not in fired:
+                        fired[mkey] = True
+                        threading.Thread(target=monitor_markets, daemon=True).start()
 
         except Exception as e:
             print(f"[SCHEDULER] {e}")
