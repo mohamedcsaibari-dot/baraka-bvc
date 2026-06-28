@@ -1834,7 +1834,7 @@ def monitor_markets():
         # Session BVC : 9h00–15h30 Casa = 8h00–14h30 UTC
         _now_utc   = datetime.datetime.utcnow()
         _h, _m     = _now_utc.hour, _now_utc.minute
-        _in_session = (8 <= _h < 14) or (_h == 14 and _m < 30)
+        _in_session = (8 <= _h < 15) or (_h == 15 and _m <= 30)
         try:
             ag_now  = macro.get("silver",{}).get("p",0) if isinstance(macro.get("silver",{}),dict) else 0
             au_now  = macro.get("gold",{}).get("p",0)   if isinstance(macro.get("gold",{}),dict)   else 0
@@ -1975,17 +1975,16 @@ def start_flask():
 def run_scheduler():
     print("""
 +===================================================+
-|  BARAKA v7.2 - BVC HEDGE FUND INTELLIGENCE        |
+|  BARAKA v7.3 - BVC HEDGE FUND INTELLIGENCE        |
 +===================================================+
 |  05:00 UTC (06:00 Casa) → Pre-collecte profonde   |
 |  07:30 UTC (08:30 Casa) → Brief Ouverture         |
 |  11:00 UTC (12:00 Casa) → Analyse + Recos         |
 |  14:30 UTC (15:30 Casa) → Post-Cloture            |
-|  /5 min  (6h-23h UTC)  → Alertes marches + MINES |
-|  /10 min (9h-15h UTC)  → Triggers positions      |
+|  /5 min  (8h-15h30 UTC) → Alertes marches+MINES |
+|  /10 min (9h-15h UTC)   → Triggers positions     |
 +===================================================+
-|  NOUVEAU v7.2: Élasticité SMI/MNG dans chaque     |
-|  email. Alertes ±1% XAG/XAU en temps réel.        |
+|  v7.3: SMI+MNG(or+Cu)+CMT(Ag+Zn) | Alertes BVC  |
 +===================================================+
     """)
     threading.Thread(target=start_flask, daemon=True).start()
@@ -2026,8 +2025,8 @@ def run_scheduler():
                         fired[tk] = True
                         threading.Thread(target=monitor_triggers, daemon=True).start()
 
-            # Alertes marchés + mines: toutes les 5 min, 6h-23h UTC (y compris weekend pour metaux)
-            if 6 <= h < 23 and m % 5 == 0:
+            # Alertes marchés + mines : séance BVC uniquement (8h-15h30 UTC)
+            if (8 <= h < 15 or (h == 15 and m <= 30)) and m % 5 == 0:
                 mk = f"mkt_{today}_{h}_{m}"
                 if mk not in fired:
                     fired[mk] = True
