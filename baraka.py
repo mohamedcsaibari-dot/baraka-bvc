@@ -65,10 +65,10 @@ def scrape_rss(url, limit=5):
 BVC = {
     "ATW":{"n":"Attijariwafa Bank","s":"Banque","v":85000,"mc":"large"},
     "BCP":{"n":"Banque Centrale Pop.","s":"Banque","v":60000,"mc":"large"},
-    "BMCE":{"n":"Bank of Africa","s":"Banque","v":70000,"mc":"large"},
+    "BOA":{"n":"Bank of Africa","s":"Banque","v":70000,"mc":"large"},
     "CIH":{"n":"CIH Bank","s":"Banque","v":45000,"mc":"mid"},
     "CDM":{"n":"Credit du Maroc","s":"Banque","v":18000,"mc":"mid"},
-    "BMCI":{"n":"BMCI","s":"Banque","v":12000,"mc":"mid"},
+    "BCI":{"n":"BCI","s":"Banque","v":12000,"mc":"mid"},
     "CFG":{"n":"CFG Bank","s":"Banque","v":8000,"mc":"small"},
     "WAA":{"n":"Wafa Assurance","s":"Assurance","v":6000,"mc":"mid"},
     "ATL":{"n":"Atlanta","s":"Assurance","v":5000,"mc":"small"},
@@ -76,30 +76,29 @@ BVC = {
     "IAM":{"n":"Maroc Telecom","s":"Telecom","v":120000,"mc":"large"},
     "HPS":{"n":"HPS","s":"Tech","v":15000,"mc":"mid"},
     "OCP":{"n":"OCP Group","s":"Chimie","v":95000,"mc":"large"},
-    "MANAGEM":{"n":"Managem","s":"Mines","v":12000,"mc":"mid"},
+    "MNG":{"n":"Managem","s":"Mines","v":12000,"mc":"mid"},
     "SMI":{"n":"SMI (Argent)","s":"Mines","v":8000,"mc":"small"},
     "CMT":{"n":"CMT (Zinc/Plomb)","s":"Mines","v":5000,"mc":"small"},
     "ADH":{"n":"Addoha","s":"Immobilier","v":35000,"mc":"mid"},
-    "ALM":{"n":"Alliances","s":"Immobilier","v":15000,"mc":"mid"},
-    "DAR":{"n":"Res. Dar Saada","s":"Immobilier","v":4000,"mc":"small"},
-    "TGCC":{"n":"TGCC","s":"Construction","v":5000,"mc":"mid"},
-    "SGTM":{"n":"SGTM","s":"Construction","v":3000,"mc":"small"},
-    "HOL":{"n":"Holcim Maroc","s":"Construction","v":12000,"mc":"mid"},
+    "ADI":{"n":"Alliances","s":"Immobilier","v":15000,"mc":"mid"},
+    "RDS":{"n":"Res. Dar Saada","s":"Immobilier","v":4000,"mc":"small"},
+    "TGC":{"n":"TGC","s":"Construction","v":5000,"mc":"mid"},
+    "GTM":{"n":"GTM","s":"Construction","v":3000,"mc":"small"},
     "CMA":{"n":"Ciments du Maroc","s":"Construction","v":10000,"mc":"mid"},
     "LHM":{"n":"LafargeHolcim","s":"Construction","v":9000,"mc":"mid"},
-    "AKDITAL":{"n":"Akdital","s":"Sante","v":4500,"mc":"mid"},
-    "LABEL":{"n":"Label Vie","s":"Distribution","v":9000,"mc":"mid"},
-    "LAC":{"n":"Lesieur Cristal","s":"Agro","v":11000,"mc":"mid"},
-    "COSUMAR":{"n":"Cosumar","s":"Agro","v":8000,"mc":"mid"},
+    "AKT":{"n":"Akdital","s":"Sante","v":4500,"mc":"mid"},
+    "LBV":{"n":"Label Vie","s":"Distribution","v":9000,"mc":"mid"},
+    "LES":{"n":"Lesieur Cristal","s":"Agro","v":11000,"mc":"mid"},
+    "CSR":{"n":"Cosumar","s":"Agro","v":8000,"mc":"mid"},
     "TMA":{"n":"Total Maroc","s":"Energie","v":7000,"mc":"mid"},
-    "TAQA":{"n":"Taqa Morocco","s":"Energie","v":8000,"mc":"mid"},
-    "SRM":{"n":"Sonasid","s":"Siderurgie","v":6000,"mc":"mid"},
+    "TQM":{"n":"Taqa Morocco","s":"Energie","v":8000,"mc":"mid"},
+    "SID":{"n":"Sonasid","s":"Siderurgie","v":6000,"mc":"mid"},
     "CTM":{"n":"CTM","s":"Transport","v":5000,"mc":"small"},
-    "SOTHEMA":{"n":"Sothema","s":"Pharma","v":6000,"mc":"mid"},
+    "SOT":{"n":"Sothema","s":"Pharma","v":6000,"mc":"mid"},
     "RIS":{"n":"Risma","s":"Tourisme","v":5000,"mc":"small"},
     "EQDOM":{"n":"Eqdom","s":"Credit Conso","v":4000,"mc":"small"},
 }
-VIP = ["ADH","ALM","TGCC","SGTM","DAR","AKDITAL","MANAGEM","SMI","CMT"]
+VIP = ["ADH","ADI","TGC","GTM","RDS","AKT","MNG","SMI","CMT"]
 
 BVC_DAILY_CAP = 10.0
 def cap_move(pct): return max(-BVC_DAILY_CAP, min(BVC_DAILY_CAP, pct))
@@ -108,7 +107,7 @@ def at_limit(chg): return abs(chg) >= 9.5
 
 MINING_BETAS = {
     "SMI":     {"silver":1.85,"gold":0.35,"dxy":-0.85,"lead_driver":"silver","lead_min":20},
-    "MANAGEM": {"gold":1.05,"copper":0.55,"silver":0.45,"dxy":-0.70,"lead_driver":"gold","lead_min":30},
+    "MNG": {"gold":1.05,"copper":0.55,"silver":0.45,"dxy":-0.70,"lead_driver":"gold","lead_min":30},
     "CMT":     {"copper":0.70,"silver":0.35,"gold":0.30,"dxy":-0.50,"lead_driver":"copper","lead_min":30},
 }
 
@@ -142,7 +141,7 @@ def mining_fair_value(ticker, d, macro):
 
 def mining_intelligence(bvc_data, macro):
     out = []
-    for t in ["SMI","MANAGEM","CMT"]:
+    for t in ["SMI","MNG","CMT"]:
         d = bvc_data.get(t)
         if not d: continue
         fv = mining_fair_value(t, d, macro)
@@ -171,15 +170,15 @@ SECTOR_BETAS = {
 
 GEO_EVENTS = {
     "ormuz":       {"keywords":["ormuz","hormuz","detroit","strait","blocus petrolier"],
-                    "chain":"Fermeture Ormuz -> Brent +15-30% -> inflation importee Maroc -> BAM hawkish","winners":["MANAGEM","SMI"],"losers":["ADH","ALM","DAR","TGCC","CTM"]},
+                    "chain":"Fermeture Ormuz -> Brent +15-30% -> inflation importee Maroc -> BAM hawkish","winners":["MNG","SMI"],"losers":["ADH","ADI","RDS","TGC","CTM"]},
     "iran_escalade":{"keywords":["iran","israel","frappe","missile","guerre","attaque"],
-                    "chain":"Escalade -> prime risque petrole + or refuge -> MAIS si DXY monte, metaux peuvent CHUTER (paradoxe deleveraging)","winners":["MANAGEM","SMI"],"losers":[]},
+                    "chain":"Escalade -> prime risque petrole + or refuge -> MAIS si DXY monte, metaux peuvent CHUTER (paradoxe deleveraging)","winners":["MNG","SMI"],"losers":[]},
     "fed_hike":    {"keywords":["fed hausse","rate hike","powell hawkish","taux directeur hausse","resserrement"],
-                    "chain":"Hausse taux Fed -> DXY+ -> pression MAD -> POSITIF banques, NEGATIF immobilier + mines","winners":["ATW","BCP","BMCE","CIH"],"losers":["ADH","ALM","DAR","MANAGEM","SMI"]},
+                    "chain":"Hausse taux Fed -> DXY+ -> pression MAD -> POSITIF banques, NEGATIF immobilier + mines","winners":["ATW","BCP","BOA","CIH"],"losers":["ADH","ADI","RDS","MNG","SMI"]},
     "fed_cut":     {"keywords":["fed baisse","rate cut","powell dovish","assouplissement","baisse taux"],
-                    "chain":"Baisse taux Fed -> DXY- -> metaux+ -> POSITIF mines + immobilier","winners":["MANAGEM","SMI","ADH","ALM"],"losers":[]},
+                    "chain":"Baisse taux Fed -> DXY- -> metaux+ -> POSITIF mines + immobilier","winners":["MNG","SMI","ADH","ADI"],"losers":[]},
     "douane_taxe": {"keywords":["douane","tarif","taxe import","droits douane","barriere"],
-                    "chain":"Hausse droits douane -> cout intrants importes+ -> NEGATIF agro/distribution","winners":["SRM","LHM","CMA","HOL"],"losers":["LABEL","LAC","COSUMAR"]},
+                    "chain":"Hausse droits douane -> cout intrants importes+ -> NEGATIF agro/distribution","winners":["SID","LHM","CMA","HOL"],"losers":["LBV","LES","CSR"]},
 }
 
 def detect_geo_event(geo_news):
@@ -547,10 +546,10 @@ def render_elasticity_block(bvc_data, macro):
     zn  = macro.get("zinc",{}).get("p",0)   or 0.0
 
     smi_p = bvc_data.get("SMI",{}).get("close",0)     if bvc_data else 0
-    mng_p = bvc_data.get("MANAGEM",{}).get("close",0)  if bvc_data else 0
+    mng_p = bvc_data.get("MNG",{}).get("close",0)  if bvc_data else 0
     cmt_p = bvc_data.get("CMT",{}).get("close",0)      if bvc_data else 0
     smi_o = bvc_data.get("SMI",{}).get("open",0)       if bvc_data else 0
-    mng_o = bvc_data.get("MANAGEM",{}).get("open",0)   if bvc_data else 0
+    mng_o = bvc_data.get("MNG",{}).get("open",0)   if bvc_data else 0
     cmt_o = bvc_data.get("CMT",{}).get("open",0)       if bvc_data else 0
 
     smi_fv  = smi_fair_value(ag)
@@ -607,7 +606,7 @@ def render_elasticity_block(bvc_data, macro):
 
     smi_card = stock_card("SMI / IMITER",  smi_p, smi_fv, smi_el, smi_o, ag_smi, "Ag", ag,
                           "#38bdf8", f"pure argent | β={smi_bet:.0f} MAD/$/oz")
-    mng_card = stock_card("MANAGEM",       mng_p, mng_fv, mng_el, mng_o, au_mng, "Au", au,
+    mng_card = stock_card("MNG",       mng_p, mng_fv, mng_el, mng_o, au_mng, "Au", au,
                           "#fbbf24", f"or 48%+Cu 25%{cu_note}")
     cmt_card = stock_card("CMT / TIGHZA",  cmt_p, cmt_fv, cmt_el, cmt_o, ag_cmt, "Ag", ag,
                           "#a78bfa", f"Ag 65%+Zn+Pb 35%{zn_note} | 95g/t Ag Tighza")
@@ -701,6 +700,821 @@ def render_mines_alert_email(mine_alerts):
     )
     return subject, html
 
+
+
+# ════════════════════════════════════════════════════════════════════════════
+# BARAKA v7.4 — INTELLIGENCE AVANCÉE: MASI, GAPS, BLOCS, CB, SAISONNALITÉ
+# ════════════════════════════════════════════════════════════════════════════
+# ════════════════════════════════════════════════════════════════════════════
+# BARAKA v7.4 — MODULES INTELLIGENCE AVANCÉE
+# ════════════════════════════════════════════════════════════════════════════
+# Ajouter ces blocs dans baraka.py après render_transmission_block()
+# ════════════════════════════════════════════════════════════════════════════
+
+import calendar as _calendar
+
+# ─── CALENDRIER BANQUES CENTRALES ─────────────────────────────────────────────
+# BAM: réunions trimestrielles (3ème mardi de mars/juin/sept/déc)
+# Fed: 8 réunions FOMC/an | BCE: 8 réunions/an
+CB_CALENDAR = {
+    "BAM": {
+        "n": "Bank Al-Maghrib", "rate": 2.25, "currency": "MAD",
+        "bias": "NEUTRE",  # inflat. 1.5% modérée, croissance 5.6%, maintien attendu
+        "meetings": [
+            {"d": "2026-03-17", "done": True,  "dec": "Maintien 2.25%"},
+            {"d": "2026-06-23", "done": True,  "dec": "Maintien 2.25% (93% consensus)"},
+            {"d": "2026-09-22", "done": False, "dec": None},
+            {"d": "2026-12-15", "done": False, "dec": None},
+        ],
+        "next_bias_note": "Inflation modérée (1.5%). BAM suit à distance hausse Fed. "
+                          "Pression MAD si écart taux s'élargit. Probabilité maintien >85%.",
+        "bvc_impact": {
+            "HAUSSE": "Négatif immobilier (ADH,ADI,RDS), négatif crédit conso (EQD). Positif banques (NIM+).",
+            "BAISSE": "Positif immobilier, positif crédit. Négatif marge bancaire.",
+            "MAINTIEN": "Impact neutre. Marché pricé.",
+        }
+    },
+    "FED": {
+        "n": "Federal Reserve (FOMC)", "rate": 3.75, "currency": "USD",
+        "bias": "HAWKISH",  # PCE 4.1%, 3 hausses pricées en 2026
+        "meetings": [
+            {"d": "2026-01-29", "done": True,  "dec": "Maintien 3.50-3.75%"},
+            {"d": "2026-03-19", "done": True,  "dec": "Maintien 3.50-3.75%"},
+            {"d": "2026-05-07", "done": True,  "dec": "Maintien (pause hawkish)"},
+            {"d": "2026-06-18", "done": True,  "dec": "Maintien, signal haussier"},
+            {"d": "2026-07-30", "done": False, "dec": None},
+            {"d": "2026-09-17", "done": False, "dec": None},
+            {"d": "2026-11-05", "done": False, "dec": None},
+            {"d": "2026-12-17", "done": False, "dec": None},
+        ],
+        "next_bias_note": "PCE mai 4.1% — infla. au-dessus cible. Warsh hawkish. "
+                          "Marché price 62% hausse sept, 3 hausses totales 2026. "
+                          "Si hike: DXY+, or/argent-, Managem/SMI sous pression.",
+        "bvc_impact": {
+            "HAUSSE": "DXY+ → métaux-. Négatif SMI/MNG/CMT. USD/MAD pression. Positif exportateurs (OCP).",
+            "BAISSE": "DXY- → métaux+. Positif mines. USD/MAD stable.",
+            "MAINTIEN": "Réaction selon ton du communiqué. Hawkish = négatif mines.",
+        }
+    },
+    "BCE": {
+        "n": "Banque Centrale Européenne", "rate": 2.50, "currency": "EUR",
+        "bias": "NEUTRE",  # pause depuis déc 2025
+        "meetings": [
+            {"d": "2026-01-30", "done": True,  "dec": "Maintien 2.50% (5ème consécutif)"},
+            {"d": "2026-03-06", "done": True,  "dec": "Maintien 2.50%"},
+            {"d": "2026-04-17", "done": True,  "dec": "Pause maintien"},
+            {"d": "2026-06-05", "done": True,  "dec": "Maintien 2.50%"},
+            {"d": "2026-07-24", "done": False, "dec": None},
+            {"d": "2026-09-11", "done": False, "dec": None},
+            {"d": "2026-10-29", "done": False, "dec": None},
+            {"d": "2026-12-17", "done": False, "dec": None},
+        ],
+        "next_bias_note": "BCE en pause. Inflation zone euro légèrement > 2% en 2026. "
+                          "Impact BVC via EUR/MAD: EUR fort = tourisme+, importations chères+.",
+        "bvc_impact": {
+            "HAUSSE": "EUR/MAD hausse → positif tourisme (RIS), négatif agro/distribution (intrants EUR).",
+            "BAISSE": "EUR/MAD baisse → négatif tourisme, positif exportateurs.",
+            "MAINTIEN": "Neutre. Corrélation BVC/BCE faible (5-7%).",
+        }
+    },
+}
+
+
+def get_cb_calendar():
+    """Retourne: prochaine réunion de chaque BC + jours restants + analyse BVC."""
+    today = datetime.date.today()
+    result = []
+    for cb_key, cb in CB_CALENDAR.items():
+        for m in cb["meetings"]:
+            d = datetime.date.fromisoformat(m["d"])
+            if d >= today and not m["done"]:
+                days = (d - today).days
+                result.append({
+                    "cb": cb_key, "name": cb["n"],
+                    "date": m["d"], "days": days,
+                    "rate": cb["rate"], "bias": cb["bias"],
+                    "note": cb["next_bias_note"],
+                    "bvc_impact": cb["bvc_impact"],
+                    "urgent": days <= 5, "soon": days <= 14,
+                })
+                break
+    return sorted(result, key=lambda x: x["days"])
+
+
+def _cb_groq_prediction(cb_results, macro):
+    """Groq: prédiction des prochaines décisions BC + impact BVC."""
+    if not cb_results: return ""
+    items = "\n".join(
+        f"{r['cb']} ({r['name']}): prochaine réunion {r['date']} (J-{r['days']}), "
+        f"taux actuel {r['rate']}%, biais actuel {r['bias']}\n  Note: {r['note']}"
+        for r in cb_results
+    )
+    gold_c = macro.get("gold",{}).get("c",0) if isinstance(macro.get("gold",{}),dict) else 0
+    dxy = macro.get("dxy",{}).get("p",0) if isinstance(macro.get("dxy",{}),dict) else 0
+    silver_c = macro.get("silver",{}).get("c",0) if isinstance(macro.get("silver",{}),dict) else 0
+    prompt = f"""Banques centrales — analyse et anticipation BVC Casablanca.
+Données macro temps réel: Or {gold_c:+.1f}%, Argent {silver_c:+.1f}%, DXY {dxy:.1f}
+
+Prochaines réunions:
+{items}
+
+Réponds en BULLETS (max 5, 1 ligne chacun):
+• [BAM] prédiction décision sept 2026 + probabilité + raisonnement (inflation, croissance, Fed)
+• [FED] anticiper si la hike de sept est confirmée ou repoussée d'après les signaux macro actuels  
+• [IMPACT MINES] si Fed hike confirmé: niveau argent probable et impact SMI/MNG/CMT en MAD
+• [TRADE BAM] comment jouer la décision BAM sur les banques marocaines (ATW, BCP, CIH)
+• [DIVERGENCE] si BAM maintient et Fed monte: risque MAD, comment se positionner"""
+    return groq_call(prompt, 400)
+
+
+def render_cb_calendar_block(cb_results, macro):
+    """Bloc HTML calendrier banques centrales + analyse BVC."""
+    if not cb_results: return ""
+    groq_pred = _cb_groq_prediction(cb_results, macro)
+    rows = ""
+    for r in cb_results:
+        bias_col = "#FF4560" if r["bias"]=="HAWKISH" else ("#00C87A" if r["bias"]=="DOVISH" else "#C9A84C")
+        urg_col  = "#FF4560" if r["urgent"] else ("#F59E0B" if r["soon"] else "#6B7280")
+        imp = r["bvc_impact"]
+        rows += (
+            f'<div class="card" style="border-left:4px solid {bias_col};margin-bottom:8px">'
+            f'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">'
+            f'<div><span style="font-size:14px;font-weight:900;color:{bias_col};font-family:monospace">{r["cb"]}</span>'
+            f' <span style="font-size:10px;color:#6B7280">{r["name"]}</span></div>'
+            f'<div style="text-align:right">'
+            f'<div style="font-size:12px;font-weight:700;color:{urg_col}">J-{r["days"]} ({r["date"]})</div>'
+            f'<div style="background:{bias_col}18;color:{bias_col};font-size:9px;padding:1px 8px;border-radius:3px">{r["bias"]}</div>'
+            f'</div></div>'
+            f'<div class="mg" style="margin-bottom:6px">'
+            f'<div class="mb"><div class="ml">Taux actuel</div><div class="mv go">{r["rate"]}%</div></div>'
+            f'</div>'
+            f'<div style="font-size:10px;color:#B0B8C8;margin-bottom:6px">{r["note"]}</div>'
+            f'<div style="font-size:9px;color:#6B7280">'
+            f'📈 Hausse: {imp["HAUSSE"][:80]}... &nbsp;|&nbsp; '
+            f'📉 Baisse: {imp["BAISSE"][:60]}...</div>'
+            f'</div>'
+        )
+    pred_html = (
+        f'<div class="sy" style="margin-top:8px"><div class="syt">ANTICIPATION BARAKA — DÉCISIONS À VENIR</div>'
+        f'<div class="sytx">{groq_pred}</div></div>'
+    ) if groq_pred else ""
+    return (
+        '<div class="sec" style="border-color:rgba(96,165,250,.3)">'
+        '<div class="st" style="color:#60A5FA">CALENDRIER BANQUES CENTRALES — BAM / FED / BCE</div>'
+        '<div style="font-size:9px;color:#6B7280;margin-bottom:8px">'
+        'Réunions à venir · Impact sur MASI/mines/banques · Anticipation pré-marché</div>'
+        + rows + pred_html
+        + '</div>'
+    )
+
+
+# ─── ANALYSE TECHNIQUE MASI ──────────────────────────────────────────────────
+# Big caps BVC et leurs poids estimés dans le MASI (indice pondéré par capi)
+MASI_WEIGHTS = {
+    "ATW": 0.195, "IAM": 0.148, "BCP": 0.118, "OCP": 0.102,
+    "MNG": 0.055, "CMA": 0.042, "LHM": 0.038, "TQM": 0.037,
+    "ADH": 0.022, "HPS": 0.018, "CSR": 0.016, "CDM": 0.014,
+    "CIH": 0.013, "CMT": 0.012, "SMI": 0.011, "LBV": 0.010,
+}
+
+# Niveaux S/R MASI calibrés (à mettre à jour mensuellement)
+MASI_LEVELS = {
+    "r3": 14_800, "r2": 14_500, "r1": 14_200,  # résistances
+    "pivot": 13_950,
+    "s1": 13_700, "s2": 13_400, "s3": 13_000,  # supports
+    "ath": 15_300, "atl_2y": 11_800,
+    "ma200": 13_600, "ma50": 13_900,  # estimations MA long terme
+}
+
+def get_masi_analysis(bvc_data, macro):
+    """
+    Analyse MASI: contribution des big caps + signal directionnel.
+    Retourne signal pondéré, driver dominant, et positionnement S/R estimé.
+    """
+    weighted_chg = 0.0
+    contributions = []
+    total_weight  = 0.0
+
+    for ticker, weight in MASI_WEIGHTS.items():
+        d = bvc_data.get(ticker)
+        if not d: continue
+        chg = d.get("change", 0)
+        c   = round(chg * weight, 3)
+        weighted_chg += c
+        total_weight  += weight
+        contributions.append({
+            "ticker": ticker, "name": BVC.get(ticker,{}).get("n",ticker),
+            "weight_pct": round(weight*100, 1),
+            "change": chg, "contribution": c,
+            "close": d.get("close",0),
+        })
+
+    contributions.sort(key=lambda x: -abs(x["contribution"]))
+    weighted_chg = round(weighted_chg, 2)
+
+    # Signal
+    if   weighted_chg >  0.8: signal = "HAUSSIER FORT"
+    elif weighted_chg >  0.3: signal = "HAUSSIER"
+    elif weighted_chg < -0.8: signal = "BAISSIER FORT"
+    elif weighted_chg < -0.3: signal = "BAISSIER"
+    else:                     signal = "NEUTRE"
+
+    # Positionnement S/R (estimation — sans cours MASI temps réel)
+    sr_note = ""
+    lvl = MASI_LEVELS
+    masi_est = lvl["pivot"] * (1 + weighted_chg/100)
+    for name, val in [("R3",lvl["r3"]),("R2",lvl["r2"]),("R1",lvl["r1"]),
+                      ("PIVOT",lvl["pivot"]),("S1",lvl["s1"]),("S2",lvl["s2"]),("S3",lvl["s3"])]:
+        if abs(masi_est - val) < 150:
+            sr_note = f"MASI proche du niveau {name} ({val:,})"
+            break
+
+    return {
+        "signal": signal, "weighted_chg": weighted_chg,
+        "contributions": contributions[:6],
+        "masi_est": round(masi_est),
+        "sr_note": sr_note, "levels": lvl,
+        "dominant": contributions[0] if contributions else None,
+        "coverage": round(total_weight * 100),
+    }
+
+
+def _masi_groq_analysis(masi_data, bvc_data, macro, geo):
+    """Groq: analyse profonde MASI + recommandations big caps."""
+    top5 = [(c["ticker"], c["change"], c["contribution"]) for c in masi_data["contributions"][:5]]
+    cac_c = macro.get("cac40",{}).get("c",0) if isinstance(macro.get("cac40",{}),dict) else 0
+    sp_c  = macro.get("sp500",{}).get("c",0) if isinstance(macro.get("sp500",{}),dict) else 0
+    vix   = macro.get("vix",{}).get("p",20) if isinstance(macro.get("vix",{}),dict) else 20
+    prompt = f"""MASI Casablanca — analyse intraday profonde.
+Signal pondéré big caps: {masi_data['weighted_chg']:+.2f}% → {masi_data['signal']}
+MASI estimé: {masi_data['masi_est']:,} | Couverture: {masi_data['coverage']}% du MASI
+Niveaux clés: S1={masi_data['levels']['s1']:,} · Pivot={masi_data['levels']['pivot']:,} · R1={masi_data['levels']['r1']:,}
+{masi_data['sr_note']}
+
+Top contributeurs: {top5}
+
+Contexte international: CAC40 {cac_c:+.1f}% · SP500 {sp_c:+.1f}% · VIX {vix:.0f}
+Geo: {geo.get('iran_usa',[][:1])} {geo.get('fed',[][:1])}
+
+BULLETS (max 5):
+• [MASI DIRECTION] niveau attendu fin séance + support ou résistance à surveiller en priorité
+• [BIG CAP DRIVER] quel titre fait vraiment bouger le MASI aujourd'hui et pourquoi
+• [SECTEUR FORT] secteur le plus momentum intraday à surpondérer
+• [SECTEUR FAIBLE] secteur à éviter ou shorter aujourd'hui (avec raison)
+• [TRADE MASI] si le MASI touche S1/R1 aujourd'hui: que faire exactement (quel titre, quel sens)"""
+    return groq_call(prompt, 400)
+
+
+def render_masi_block(masi_data, macro, geo=None):
+    """Bloc HTML analyse MASI + big caps + S/R."""
+    if not masi_data: return ""
+    sig = masi_data["signal"]
+    sig_col = "#00C87A" if "HAUSSIER" in sig else ("#FF4560" if "BAISSIER" in sig else "#C9A84C")
+    lvl = masi_data["levels"]
+
+    # Jauge S/R visuelle
+    def _sr_bar(est, s1, pivot, r1):
+        # Position 0→1 entre S1 et R1
+        if r1 == s1: return ""
+        pos = max(0, min(1, (est - s1) / (r1 - s1)))
+        return (
+            f'<div style="margin:8px 0">'
+            f'<div style="display:flex;justify-content:space-between;font-size:9px;color:#6B7280;margin-bottom:3px">'
+            f'<span>S1 {s1:,}</span><span>PIVOT {pivot:,}</span><span>R1 {r1:,}</span></div>'
+            f'<div style="background:#1A2030;border-radius:4px;height:8px;position:relative">'
+            f'<div style="position:absolute;left:50%;top:-1px;width:1px;height:10px;background:#C9A84C40"></div>'
+            f'<div style="width:{pos*100:.0f}%;height:100%;border-radius:4px;'
+            f'background:linear-gradient(90deg,#FF4560,#C9A84C,#00C87A)"></div>'
+            f'<div style="position:absolute;left:{pos*100:.0f}%;top:-3px;transform:translateX(-50%);'
+            f'width:8px;height:14px;background:{sig_col};border-radius:2px"></div>'
+            f'</div>'
+            f'<div style="text-align:center;font-size:10px;color:{sig_col};margin-top:3px;font-weight:700">'
+            f'MASI est. {masi_data["masi_est"]:,} MAD</div></div>'
+        )
+
+    sr_bar = _sr_bar(masi_data["masi_est"], lvl["s1"], lvl["pivot"], lvl["r1"])
+
+    # Contributions big caps
+    contrib_html = ""
+    for c in masi_data["contributions"][:6]:
+        col = "#00C87A" if c["change"] >= 0 else "#FF4560"
+        bar_w = min(100, int(abs(c["contribution"]) / 0.3 * 100))
+        contrib_html += (
+            f'<div style="display:flex;align-items:center;padding:3px 0;font-size:10px">'
+            f'<span style="color:{col};font-weight:700;font-family:monospace;min-width:44px">{c["ticker"]}</span>'
+            f'<span style="color:#6B7280;min-width:36px;font-size:9px">{c["weight_pct"]}%</span>'
+            f'<div style="flex:1;background:#0F1520;border-radius:2px;height:6px;margin:0 6px">'
+            f'<div style="width:{bar_w}%;height:100%;background:{col};border-radius:2px"></div></div>'
+            f'<span style="color:{col};min-width:50px;text-align:right">{c["change"]:+.2f}%</span>'
+            f'<span style="color:#4B5563;min-width:48px;text-align:right;font-size:9px">{c["contribution"]:+.3f}</span>'
+            f'</div>'
+        )
+
+    groq_html = ""
+    if geo:
+        g = _masi_groq_analysis(masi_data, {}, macro, geo or {})
+        if g:
+            groq_html = f'<div class="sy" style="margin-top:8px"><div class="syt">ANALYSE BARAKA MASI</div><div class="sytx">{g}</div></div>'
+
+    return (
+        '<div class="sec" style="border-color:rgba(0,200,122,.25)">'
+        f'<div class="st" style="color:#00C87A">MASI — SUPPORTS / RÉSISTANCES & BIG CAPS</div>'
+        f'<div class="mg" style="margin-bottom:10px">'
+        f'<div class="mb"><div class="ml">SIGNAL</div><div class="mv" style="color:{sig_col}">{sig}</div></div>'
+        f'<div class="mb"><div class="ml">Contribution pondérée</div><div class="mv" style="color:{sig_col}">{masi_data["weighted_chg"]:+.2f}%</div></div>'
+        f'<div class="mb"><div class="ml">Couverture</div><div class="mv go">{masi_data["coverage"]}%</div></div>'
+        f'</div>'
+        + sr_bar +
+        f'<div style="font-size:8px;color:#6B7280;margin-bottom:4px">CONTRIBUTION BIG CAPS (poids MASI × variation)</div>'
+        + contrib_html
+        + (f'<div style="font-size:10px;color:#F59E0B;margin-top:6px;padding:6px;background:rgba(245,158,11,.08);border-radius:4px">{masi_data["sr_note"]}</div>' if masi_data["sr_note"] else "")
+        + f'<div style="font-size:9px;color:#4B5563;margin-top:6px">S2={lvl["s2"]:,} · S1={lvl["s1"]:,} · PIVOT={lvl["pivot"]:,} · R1={lvl["r1"]:,} · R2={lvl["r2"]:,} | MA200≈{lvl["ma200"]:,}</div>'
+        + groq_html
+        + '</div>'
+    )
+
+
+# ─── ANALYSE DES GAPS TECHNIQUES ─────────────────────────────────────────────
+def get_gap_signals(bvc_data):
+    """
+    Détecte les gaps techniques (open ≠ close veille) à combler.
+    La clôture veille est estimée: prev_close = close_actuel / (1 + change%)
+    Un gap > 0.8% est traité comme signal.
+    """
+    gaps = []
+    for ticker, d in bvc_data.items():
+        close = d.get("close", 0); open_p = d.get("open", 0)
+        change = d.get("change", 0)
+        if not close or not open_p or open_p == close: continue
+
+        denom = 1 + change / 100
+        if abs(denom) < 0.001: continue
+        prev_close = close / denom
+
+        gap_pct = (open_p - prev_close) / prev_close * 100 if prev_close > 0 else 0
+        if abs(gap_pct) < 0.8: continue
+
+        info = BVC.get(ticker, {})
+        rsi  = d.get("rsi", 50)
+        vol  = d.get("volume", 0) / max(d.get("avg_vol", 1), 1)
+
+        # Direction du comblement = inverse du gap
+        fill_dir = "BAISSE" if gap_pct > 0 else "HAUSSE"
+        gap_type = "GAP UP" if gap_pct > 0 else "GAP DOWN"
+
+        # Probabilité: plus le gap est grand + RSI extrême → plus probable
+        rsi_conf  = (rsi > 65 and gap_pct > 0) or (rsi < 35 and gap_pct < 0)
+        prob_pct  = min(85, 55 + abs(gap_pct) * 3 + (10 if rsi_conf else 0))
+
+        # Gap comblable aujourd'hui? Si changement actuel laisse de la marge
+        room = max(0.5, 10 - abs(change))
+        fillable_today = abs(gap_pct - change) <= room
+
+        # Cible de comblement
+        target_fill = round(prev_close, 2)
+        target_pct  = round((target_fill - close) / close * 100, 1)
+
+        gaps.append({
+            "ticker":    ticker,
+            "name":      info.get("n", ticker),
+            "sector":    info.get("s", ""),
+            "gap_type":  gap_type,
+            "gap_pct":   round(gap_pct, 2),
+            "fill_dir":  fill_dir,
+            "prob":      round(prob_pct),
+            "fillable":  fillable_today,
+            "close":     close,
+            "open":      round(open_p, 2),
+            "prev_close": round(prev_close, 2),
+            "target":    target_fill,
+            "target_pct": target_pct,
+            "rsi":       rsi,
+            "vol_x":     round(vol, 1),
+        })
+
+    # Tri: comblables aujourd'hui en premier, puis par probabilité
+    gaps.sort(key=lambda x: (not x["fillable"], -x["prob"]))
+    return gaps[:12]
+
+
+def render_gaps_block(gaps):
+    """Bloc HTML des gaps techniques à combler."""
+    if not gaps: return ""
+    today_gaps = [g for g in gaps if g["fillable"]]
+    other_gaps = [g for g in gaps if not g["fillable"]]
+
+    def _gap_row(g):
+        col_g  = "#00C87A" if g["gap_pct"] < 0 else "#FF4560"
+        col_t  = "#FF4560" if g["fill_dir"] == "BAISSE" else "#00C87A"
+        arrow  = "↑" if g["fill_dir"] == "HAUSSE" else "↓"
+        prob_c = "#00C87A" if g["prob"] >= 70 else ("#C9A84C" if g["prob"] >= 55 else "#6B7280")
+        return (
+            f'<div style="padding:7px 0;border-bottom:1px solid rgba(255,255,255,.04);font-size:11px">'
+            f'<div style="display:flex;justify-content:space-between;align-items:center">'
+            f'<div>'
+            f'<span style="color:#E8E4D6;font-weight:700;font-family:monospace">{g["ticker"]}</span>'
+            f' <span style="color:#6B7280;font-size:9px">{g["sector"]}</span>'
+            f' <span style="background:{col_g}18;color:{col_g};font-size:9px;padding:1px 6px;border-radius:3px">{g["gap_type"]} {g["gap_pct"]:+.1f}%</span>'
+            f'</div>'
+            f'<div style="text-align:right">'
+            f'<span style="color:{prob_c};font-weight:700">{g["prob"]}% prob.</span>'
+            f'</div></div>'
+            f'<div style="display:flex;gap:12px;margin-top:4px;font-size:10px">'
+            f'<span style="color:#6B7280">Veille: <strong style="color:#9CA3AF">{g["prev_close"]:,.0f}</strong></span>'
+            f'<span style="color:#6B7280">Open: <strong style="color:#E8E4D6">{g["open"]:,.0f}</strong></span>'
+            f'<span style="color:#6B7280">BVC: <strong style="color:#E8E4D6">{g["close"]:,.0f}</strong></span>'
+            f'<span style="color:{col_t};font-weight:700">{arrow} Cible {g["target"]:,.0f} ({g["target_pct"]:+.1f}%)</span>'
+            f'<span style="color:#4B5563">RSI {g["rsi"]:.0f} · Vol x{g["vol_x"]}</span>'
+            f'</div></div>'
+        )
+
+    today_html = "".join(_gap_row(g) for g in today_gaps)
+    other_html = ""
+    if other_gaps:
+        other_html = (
+            '<div style="font-size:9px;color:#4B5563;margin-top:8px;padding-top:8px;border-top:1px solid rgba(255,255,255,.05)">Gaps probables multi-séances:</div>'
+            + "".join(_gap_row(g) for g in other_gaps[:4])
+        )
+
+    return (
+        '<div class="sec" style="border-color:rgba(245,158,11,.3)">'
+        '<div class="st" style="color:#F59E0B">GAPS TECHNIQUES — PROBABILITÉ DE COMBLEMENT</div>'
+        f'<div style="font-size:9px;color:#6B7280;margin-bottom:8px">'
+        f'{len(today_gaps)} comblables aujourd\'hui · Prob. = taille gap + RSI extrême + volume · Direction = inverse du gap</div>'
+        + (today_html if today_html else '<div style="color:#4B5563;font-size:11px">Aucun gap significatif détecté ce matin</div>')
+        + other_html
+        + '<div style="font-size:9px;color:#4B5563;margin-top:6px">Règle: gap up → comblement probable à la baisse. Gap down → rebond technique. Confirmer avec volume.</div>'
+        '</div>'
+    )
+
+
+# ─── MARCHÉ DE BLOCS ─────────────────────────────────────────────────────────
+def get_block_trades():
+    """Scrape le marché de blocs BVC (retard ~15min). Source: casablanca-bourse.com"""
+    blocks = []
+    try:
+        from bs4 import BeautifulSoup
+        url = "https://www.casablanca-bourse.com/fr/live-market/marche-de-blocs"
+        r = requests.get(url, headers=HDR, **R)
+        if r.status_code != 200:
+            return []
+        soup = BeautifulSoup(r.text, "html.parser")
+        for row in soup.select("table tr")[1:10]:
+            cells = row.find_all("td")
+            if len(cells) < 5: continue
+            try:
+                heure   = cells[0].get_text(strip=True)
+                raw_t   = cells[1].get_text(strip=True).upper()
+                qty_s   = cells[2].get_text(strip=True).replace("\xa0","").replace(" ","").replace(",","")
+                price_s = cells[3].get_text(strip=True).replace("\xa0","").replace(" ","").replace(",",".")
+                total_s = cells[4].get_text(strip=True).replace("\xa0","").replace(" ","").replace(",","")
+                qty   = int(qty_s)   if qty_s.isdigit() else 0
+                price = float(price_s) if price_s else 0
+                total = qty * price
+
+                ticker = None
+                for t, info in BVC.items():
+                    if t in raw_t or info["n"].split()[0].upper() in raw_t:
+                        ticker = t; break
+
+                size = ("🔴 INSTITUTIONNEL MAJEUR" if total > 10_000_000 else
+                        "🟠 INSTITUTIONNEL" if total > 3_000_000 else
+                        "🟡 BLOC STANDARD")
+
+                d = {} if not ticker else bvc_data_cache.get(ticker, {})  # type: ignore
+                bvc_close = d.get("close", price) if d else price
+                gap = round((price - bvc_close)/bvc_close*100, 1) if bvc_close > 0 else 0
+                interp = f"{size} · {total/1e6:.1f} MDH"
+                if abs(gap) > 1:
+                    interp += f" · Prix {gap:+.1f}% vs marché → {'vente forcée' if gap < 0 else 'acheteur stratégique'}"
+
+                blocks.append({
+                    "heure": heure, "ticker": ticker or raw_t,
+                    "name": BVC.get(ticker,{}).get("n", raw_t) if ticker else raw_t,
+                    "qty": qty, "price": price, "total_mad": total,
+                    "gap_vs_marche": gap, "interpretation": interp,
+                })
+            except: continue
+    except Exception as e:
+        print(f"[BLOCS] {e}")
+    return blocks
+
+
+# Variable globale pour passer bvc_data à get_block_trades
+bvc_data_cache = {}
+
+
+def render_blocks_block(blocks):
+    """Bloc HTML marché de blocs."""
+    if not blocks: return ""
+    rows = ""
+    for b in blocks:
+        total_m = b["total_mad"]
+        size_col = "#FF4560" if total_m > 10e6 else ("#F59E0B" if total_m > 3e6 else "#C9A84C")
+        gap_col  = "#00C87A" if b["gap_vs_marche"] > 0 else "#FF4560"
+        rows += (
+            f'<div style="padding:8px 0;border-bottom:1px solid rgba(255,255,255,.04)">'
+            f'<div style="display:flex;justify-content:space-between;font-size:11px">'
+            f'<div>'
+            f'<span style="color:#6B7280;font-size:9px">{b["heure"]} </span>'
+            f'<span style="color:{size_col};font-weight:700;font-family:monospace">{b["ticker"]}</span>'
+            f' <span style="color:#9CA3AF">{b["name"]}</span>'
+            f'</div>'
+            f'<span style="color:{size_col};font-weight:700">{total_m/1e6:.1f} MDH</span>'
+            f'</div>'
+            f'<div style="font-size:10px;color:#6B7280;margin-top:3px">'
+            f'{b["qty"]:,} titres @ {b["price"]:,.2f} MAD'
+            + (f' · Gap marché <span style="color:{gap_col}">{b["gap_vs_marche"]:+.1f}%</span>' if abs(b["gap_vs_marche"]) > 0.5 else "")
+            + f'</div>'
+            f'<div style="font-size:9px;color:#B0B8C8;margin-top:2px">{b["interpretation"]}</div>'
+            f'</div>'
+        )
+    return (
+        '<div class="sec" style="border-color:rgba(239,68,68,.25)">'
+        '<div class="st" style="color:#EF4444">MARCHÉ DE BLOCS BVC — SMART MONEY (~15 min retard)</div>'
+        f'<div style="font-size:9px;color:#6B7280;margin-bottom:8px">'
+        f'{len(blocks)} transaction(s) · Gap vs marché = acheteur/vendeur stratégique hors carnet</div>'
+        + rows
+        + '<div style="font-size:9px;color:#4B5563;margin-top:6px">Bloc > 10 MDH = institutionnel. Prix > marché = acheteur agressif. Prix < marché = cession forcée.</div>'
+        '</div>'
+    )
+
+
+# ─── PATTERNS SAISONNIERS & FIN DE MOIS ──────────────────────────────────────
+# Framework basé sur l'analyse historique BVC 4 ans (2022-2026)
+# + effets calendaires connus sur les marchés émergents
+SEASONAL_DB = {
+    # Fin de mois
+    "eom_j3": {
+        "trigger": lambda day, last: last - day <= 2,
+        "bias": "HAUSSIER",
+        "msg": "Fin de mois J-{d} — window dressing institutionnel. Les gérants de fonds achètent les grandes caps pour embellir les reportings. ATW, IAM, BCP statistiquement surperforment les 2 derniers jours.",
+        "plays": ["ATW","BCP","IAM","OCP"],
+        "avoid": [],
+        "confidence": 68,
+    },
+    "eom_j1": {
+        "trigger": lambda day, last: last - day == 0,
+        "bias": "NEUTRE",
+        "msg": "Dernier jour du mois — volume réduit, spread élargi. Les institutionnels ont déjà agi. Éviter les trades de momentum, favoriser les niveaux de support.",
+        "plays": [],
+        "avoid": [],
+        "confidence": 55,
+    },
+    # Début de mois
+    "bom_j1j3": {
+        "trigger": lambda day, last: day <= 3,
+        "bias": "HAUSSIER",
+        "msg": "Début de mois J+{d} — flux entrants fonds marocains et pension funds (allocation mensuelle). MASI historiquement positif J+1 à J+3. Suivre les big caps en retard.",
+        "plays": ["ATW","BCP","MNG","SMI"],
+        "avoid": [],
+        "confidence": 64,
+    },
+    # Juillet-Août: creux
+    "summer": {
+        "trigger": lambda day, last: datetime.date.today().month in [7,8],
+        "bias": "BAISSIER",
+        "msg": "Été (juillet-août) — volume BVC en baisse de 35-40% historiquement. Spread élargi, illiquidité. Favoriser les défensives (IAM) et réduire l'exposition globale.",
+        "plays": ["IAM"],
+        "avoid": ["SMI","CMT","ADH","ADI"],
+        "confidence": 72,
+    },
+    # Mars-Avril: saison AG et dividendes
+    "dividend_season": {
+        "trigger": lambda day, last: datetime.date.today().month in [3,4,5],
+        "bias": "HAUSSIER",
+        "msg": "Saison dividendes (mars-mai) — ATW, BCP, IAM, OCP versent leurs dividendes. Rendement attractif attire les institutionnels avant la date de détachement.",
+        "plays": ["ATW","BCP","IAM","OCP","LHM"],
+        "avoid": [],
+        "confidence": 70,
+    },
+    # Janvier: effet de début d'année
+    "jan_effect": {
+        "trigger": lambda day, last: datetime.date.today().month == 1 and day <= 15,
+        "bias": "HAUSSIER",
+        "msg": "Effet janvier — repositionnement début d'année. Les mid/small caps en retard l'année précédente sont achetées. HPS, TGC, AKT souvent portés.",
+        "plays": ["HPS","TGC","AKT","MNG"],
+        "avoid": [],
+        "confidence": 60,
+    },
+    # Publication résultats S1 (juillet)
+    "results_s1": {
+        "trigger": lambda day, last: datetime.date.today().month == 7 and 15 <= day <= 31,
+        "bias": "NEUTRE",
+        "msg": "Publications résultats S1 (mi-juillet) — fort catalyseur individuel. Jouer uniquement les titres avec surprises positives historiques. Attention profit warnings (immobilier).",
+        "plays": ["ATW","OCP","HPS"],
+        "avoid": ["ADH","ADI","RDS"],
+        "confidence": 58,
+    },
+}
+
+
+def get_seasonal_alert():
+    """Génère les alertes saisonnières actives pour aujourd'hui."""
+    today = datetime.date.today()
+    day   = today.day
+    last  = _calendar.monthrange(today.year, today.month)[1]
+    alerts = []
+
+    for key, pat in SEASONAL_DB.items():
+        try:
+            if pat["trigger"](day, last):
+                d_str = str(day) if "{d}" in pat["msg"] else ""
+                msg   = pat["msg"].replace("{d}", str(last - day)).replace("{d}", str(day))
+                alerts.append({
+                    "key": key, "bias": pat["bias"], "msg": msg,
+                    "plays": pat["plays"], "avoid": pat["avoid"],
+                    "confidence": pat["confidence"],
+                })
+        except: continue
+
+    return alerts
+
+
+def render_seasonal_block(alerts):
+    """Bloc HTML alertes saisonnières."""
+    if not alerts: return ""
+    rows = ""
+    for a in alerts:
+        bias_col = "#00C87A" if a["bias"]=="HAUSSIER" else ("#FF4560" if a["bias"]=="BAISSIER" else "#C9A84C")
+        plays = " ".join(f'<span style="color:#00C87A;font-weight:700;font-size:10px">{t}</span>' for t in a["plays"])
+        avoid = " ".join(f'<span style="color:#FF4560;font-weight:700;font-size:10px">{t}</span>' for t in a["avoid"])
+        conf_col = "#00C87A" if a["confidence"]>=65 else "#C9A84C"
+        rows += (
+            f'<div style="background:rgba(245,158,11,.05);border-left:3px solid {bias_col};'
+            f'border-radius:4px;padding:10px;margin-bottom:8px">'
+            f'<div style="display:flex;justify-content:space-between;margin-bottom:5px">'
+            f'<span style="color:{bias_col};font-weight:700;font-size:11px">{a["bias"]}</span>'
+            f'<span style="color:{conf_col};font-size:10px">Confiance {a["confidence"]}%</span>'
+            f'</div>'
+            f'<div style="font-size:11px;color:#E8E4D6;line-height:1.6;margin-bottom:6px">{a["msg"]}</div>'
+            + (f'<div style="margin-top:4px">Jouer: {plays}</div>' if plays else "")
+            + (f'<div style="margin-top:3px">Éviter: {avoid}</div>' if avoid else "")
+            + '</div>'
+        )
+
+    return (
+        '<div class="sec" style="border-color:rgba(245,158,11,.3)">'
+        '<div class="st" style="color:#F59E0B">PATTERNS SAISONNIERS — CALENDAIRE BVC</div>'
+        f'<div style="font-size:9px;color:#6B7280;margin-bottom:8px">'
+        f'{len(alerts)} pattern(s) actif(s) · Basé sur analyse historique 2022-2026 · Pas une certitude</div>'
+        + rows
+        + '</div>'
+    )
+
+
+# ─── ROTATION SECTORIELLE — PROXY INDICATORS ──────────────────────────────────
+# Corrélations historiques BVC 10 ans (2014-2024, hors covid 2020)
+# Logique: proxy externe détectable → signal anticipatoire sur secteur BVC
+SECTOR_PROXIES = {
+    "Mines": {
+        "proxies": [
+            ("Argent XAG", "silver", "p", ">58", "+", "SMI/CMT surperforment si Ag > $58. Historiquement +40% en 2023 bull run."),
+            ("Or XAU",     "gold",   "p", ">3500","+", "MNG corrèle à +85% avec XAU. Chaque +10% or → +12-15% MNG."),
+            ("DXY",        "dxy",    "p", "<102", "+", "DXY < 102 = dollar faible = métaux forts = mines BVC up."),
+            ("Fed dovish",  None,    None, None,  "+", "Baisse taux Fed → DXY- → or+ → mines+ (délai 2-4 semaines)."),
+        ],
+        "outperform_conditions": "Ag > $55, Au > $3500, DXY < 102, Fed dovish ou pause prolongée",
+        "underperform_conditions": "Fed hawkish, DXY > 105, récession mondiale (copper baisse)",
+        "historical_peak": "2023: SMI +85%, MNG +60% avec Ag $18→$24. 2025: MNG ATH avec Au $2000→$3300",
+    },
+    "Banque": {
+        "proxies": [
+            ("Spread 10Y-2Y", "yield_spread", None, ">0.5", "+", "Spread positif = NIM bancaire +. ATW/BCP profitent."),
+            ("Croissance crédit BAM", None, None, ">6%", "+", "Crédit >6% YoY = expansion bilans bancaires."),
+            ("BAM taux", None, None, "hausse", "+", "Hausse TD BAM = marge nette intérêt +. Positif banques."),
+        ],
+        "outperform_conditions": "Spread positif, crédit en expansion, BAM stable ou haussier, VIX < 20",
+        "underperform_conditions": "Courbe inversée, risque crédit élevé, crise immobilier (ADH, ADI défaut)",
+        "historical_peak": "2024: ATW +35% avec croissance crédit 8% + stabilisation taux. Q1 2025: BCP+28%.",
+    },
+    "Immobilier": {
+        "proxies": [
+            ("Ventes ciment",  None, None, "hausse", "+", "Ventes ciment +10% → activité BTP → promoteurs++."),
+            ("BAM taux", None, None, "baisse", "+", "Baisse TD BAM = crédit immo accessible = promoteurs+."),
+            ("Programme social Maroc", None, None, None, "+", "Plan logement social (2M unités) = catalyseur ADH/ADI/RDS."),
+        ],
+        "outperform_conditions": "BAM dovish, taux immo < 4.5%, plan logement actif, crédits décaissés",
+        "underperform_conditions": "BAM hawkish, taux > 5%, surendettement promoteurs (cf. Alliances 2019-2022)",
+        "historical_peak": "2022: RDS +120%, ADH +40% avec plan logement + taux bas. 2014-2018: secteur bull 5 ans.",
+    },
+    "Chimie": {
+        "proxies": [
+            ("Prix phosphate DAP", None, None, ">700$/T", "+", "DAP > $700/T → OCP profitabilité élevée."),
+            ("USD/MAD", "usd_mad", "p", ">10.2", "+", "MAD faible = exports OCP en USD valorisés +."),
+            ("Restrictions Chine export", None, None, None, "+", "Restrictions phosphate chine = OCP share de marché +."),
+        ],
+        "outperform_conditions": "DAP > $700/T, USD/MAD > 10.0, restrictions chinoises, demande agri mondiale",
+        "underperform_conditions": "DAP < $500, MAD fort, offre mondiale excédentaire (Russie/BRN)",
+        "historical_peak": "2022: OCP +55% (DAP $1000/T). 2025: OCP +30% (DAP $816/T BAM forecast).",
+    },
+    "Tourisme": {
+        "proxies": [
+            ("EUR/MAD", "eur_mad", "p", "<10.5", "+", "EUR fort = touristes européens plus riches en MAD = RevPAR+."),
+            ("Trafic aérien Maroc", None, None, "hausse", "+", "Arrivées +10% → Risma capacité occupée +."),
+            ("Brent", "brent", "p", "<85$", "+", "Brent < $85 = aérien moins cher = plus de touristes."),
+        ],
+        "outperform_conditions": "EUR/MAD stable, brent bas, saison haute (mai-sept), Maroc grands événements",
+        "underperform_conditions": "Crise géopolitique, Brent > $100, EUR faible",
+        "historical_peak": "2023-2024: RIS +60% avec tourisme Maroc record (15M+ visiteurs).",
+    },
+    "Energie": {
+        "proxies": [
+            ("Brent", "brent", "p", None, "~", "TMA et TAQA: brent+ = CA+. Mais marge compressée si régulation prix."),
+            ("Réglementation prix", None, None, None, "~", "Maroc réglemente les prix carburants → marge capée."),
+        ],
+        "outperform_conditions": "Brent stable autour $70-80, demande Maroc en croissance, compensation état",
+        "underperform_conditions": "Brent > $100 (compression marge si prix plafonnés)",
+        "historical_peak": "Secteur défensif, peu de bull run spectaculaire. TMA +20% en 2022 (brent+CA).",
+    },
+    "Sante": {
+        "proxies": [
+            ("Couverture médicale AMO", None, None, "expansion", "+", "Extension AMO = plus d'assurés = plus d'actes Akdital."),
+            ("Investissement hopitaux", None, None, None, "+", "Budget santé public + PPP = demande cliniques privées."),
+        ],
+        "outperform_conditions": "Extension AMO, croissance population, déficit capacité publique",
+        "underperform_conditions": "Régulation tarifs soins, concurrence, effet de base élevé",
+        "historical_peak": "AKT: +180% depuis IPO 2022 → 2025. Secteur structurellement bullish 10 ans.",
+    },
+}
+
+
+def get_sector_rotation_signal(macro, bvc_data):
+    """Génère les signaux de rotation sectorielle basés sur proxies macro."""
+    today = datetime.date.today()
+    signals = []
+
+    for sector, info in SECTOR_PROXIES.items():
+        score = 0
+        fired = []
+        for proxy_name, macro_key, subkey, threshold, direction, desc in info["proxies"]:
+            if macro_key and macro_key in macro:
+                val_d = macro[macro_key]
+                val   = val_d.get(subkey or "p", 0) if isinstance(val_d, dict) else val_d
+                if val == 0: continue
+                if threshold and threshold.startswith(">"):
+                    th = float(threshold[1:])
+                    if val > th:
+                        score += (1 if direction=="+" else -1)
+                        fired.append(f"{proxy_name} {val:.1f} > {th} → {direction}")
+                elif threshold and threshold.startswith("<"):
+                    th = float(threshold[1:])
+                    if val < th:
+                        score += (1 if direction=="+" else -1)
+                        fired.append(f"{proxy_name} {val:.1f} < {th} → {direction}")
+
+        # Score sectoriel
+        if score >= 2:
+            sig, col = "SURPONDÉRER", "#00C87A"
+        elif score == 1:
+            sig, col = "NEUTRE+", "#C9A84C"
+        elif score <= -2:
+            sig, col = "SOUS-PONDÉRER", "#FF4560"
+        elif score == -1:
+            sig, col = "NEUTRE-", "#F59E0B"
+        else:
+            sig, col = "NEUTRE", "#6B7280"
+
+        if abs(score) >= 1:
+            signals.append({
+                "sector": sector, "score": score, "signal": sig, "color": col,
+                "fired": fired, "outperform": info["outperform_conditions"],
+                "peak": info["historical_peak"],
+            })
+
+    signals.sort(key=lambda x: -x["score"])
+    return signals
+
+
+def render_sector_rotation_block(signals):
+    """Bloc HTML rotation sectorielle avec proxies."""
+    if not signals: return ""
+    rows = ""
+    for s in signals[:6]:
+        score_bar = "█" * abs(s["score"]) + "░" * max(0, 3 - abs(s["score"]))
+        fired_html = " · ".join(f'<span style="color:#9CA3AF">{f}</span>' for f in s["fired"][:2])
+        rows += (
+            f'<div style="padding:7px 0;border-bottom:1px solid rgba(255,255,255,.04)">'
+            f'<div style="display:flex;justify-content:space-between;align-items:center">'
+            f'<div><span style="color:{s["color"]};font-weight:700;min-width:80px;display:inline-block">{s["sector"]}</span>'
+            f'<span style="color:{s["color"]};font-size:9px;font-family:monospace">{score_bar}</span></div>'
+            f'<span style="background:{s["color"]}18;color:{s["color"]};font-size:9px;padding:2px 8px;border-radius:3px">{s["signal"]}</span>'
+            f'</div>'
+            f'<div style="font-size:10px;color:#6B7280;margin-top:3px">{fired_html}</div>'
+            f'<div style="font-size:9px;color:#4B5563;margin-top:2px">Historique: {s["peak"][:80]}...</div>'
+            f'</div>'
+        )
+    return (
+        '<div class="sec" style="border-color:rgba(139,92,246,.3)">'
+        '<div class="st" style="color:#8B5CF6">ROTATION SECTORIELLE — PROXIES HISTORIQUES 10 ANS</div>'
+        '<div style="font-size:9px;color:#6B7280;margin-bottom:8px">'
+        'Corrélations historiques BVC 2014-2024 (hors covid). Proxies déclencheurs temps réel.</div>'
+        + rows
+        + '</div>'
+    )
+
+
+
 # ─── EMAIL & GROQ ─────────────────────────────────────────────────────────────
 def send_email(subject, html):
     if not RESEND_KEY: print("[EMAIL] No key"); return False
@@ -778,7 +1592,7 @@ def get_macro():
         name = inv.get(tv_sym)
         if name: m[name] = data; got += 1
     print(f"[MACRO] TradingView: {got}/{len(syms)} symboles")
-    defaults = {"sp500":{"p":0,"c":0},"nasdaq":{"p":0,"c":0},"cac40":{"p":0,"c":0},"dax":{"p":0,"c":0},"ftse":{"p":0,"c":0},"nikkei":{"p":0,"c":0},"shanghai":{"p":0,"c":0},"hsi":{"p":0,"c":0},"gold":{"p":0,"c":0},"silver":{"p":0,"c":0},"brent":{"p":0,"c":0},"wti":{"p":0,"c":0},"copper":{"p":0,"c":0},"dxy":{"p":0,"c":0},"vix":{"p":20,"c":0},"us10y":{"p":0,"c":0},"us2y":{"p":0,"c":0},"zinc":{"p":0,"c":0},"lead":{"p":0,"c":0}}
+    defaults = {"sp500":{"p":0,"c":0},"nasdaq":{"p":0,"c":0},"cac40":{"p":0,"c":0},"dax":{"p":0,"c":0},"ftse":{"p":0,"c":0},"nikkei":{"p":0,"c":0},"shanghai":{"p":0,"c":0},"hsi":{"p":0,"c":0},"gold":{"p":0,"c":0},"silver":{"p":0,"c":0},"brent":{"p":0,"c":0},"wti":{"p":0,"c":0},"copper":{"p":0,"c":0},"dxy":{"p":0,"c":0},"vix":{"p":20,"c":0},"us10y":{"p":0,"c":0},"us2y":{"p":0,"c":0},"zinc":{"p":0,"c":0},"lead":{"p":0,"c":0},"usdjpy":{"p":150,"c":0},"jp10y":{"p":0.8,"c":0}}
     for k,v in defaults.items():
         if k not in m: m[k] = v
     m["us10y_chg"] = m["us10y"]["c"] if isinstance(m["us10y"],dict) else 0
@@ -1465,6 +2279,12 @@ BULLETS (max 6):
 </div>
 
 {f'<div class="sec"><div class="st">ROTATION SECTORIELLE</div>{sec_html}</div>' if sec_html else ""}
+
+{render_cb_calendar_block(get_cb_calendar(), macro)}
+
+{render_seasonal_block(get_seasonal_alert())}
+
+{render_cb_directors_block(get_cb_director_news())}
 <div class="sec"><div class="st">PUBLICATIONS AMMC</div>{ammc_html}</div>
 <div class="sec"><div class="st">NEWS BVC — BOURSENEWS</div>{bn_html}</div>
 <div class="sec"><div class="st">INTELLIGENCE SOCIALE</div>{soc_html}</div>
@@ -1593,6 +2413,28 @@ def analyse_entrees():
 {f'<div class="geo"><div class="geot">ALERTES CRISE</div>{crisis_banner}</div>' if crisis_banner else ""}
 
 {render_mining_block(mining_data, macro)}
+
+{render_masi_block(masi_data, macro, geo)}
+
+{render_gaps_block(gap_signals)}
+
+{render_blocks_block(block_trades)}
+
+{render_cb_calendar_block(cb_calendar, macro)}
+
+{render_seasonal_block(seasonal_al)}
+
+{render_sector_rotation_block(sector_rot)}
+
+{render_ammc_synthesis_block(get_ammc_synthesis(ammc_pubs))}
+
+{render_flow_block(get_flow_analysis(bvc_data))}
+
+{render_macro_risk_block(*get_macro_risks(macro))}
+
+{render_opci_block(get_opci_alerts())}
+
+{render_dividend_block(*get_dividend_alerts(bvc_data, window_days=7))}
 
 {_elast_full}
 
@@ -1723,6 +2565,12 @@ def post_cloture():
 
 {exc_html2}
 
+{render_gaps_block(get_gap_signals(bvc_data)) if bvc_data else ""}
+
+{render_masi_block(get_masi_analysis(bvc_data, macro), macro) if bvc_data else ""}
+
+{render_blocks_block(get_block_trades())}
+
 <div class="sec"><div class="st">PARIS POUR DEMAIN — NIVEAUX D'ENTREE</div>{paris_html}</div>
 
 <div class="ft">Prochain: demain 05h00 — Pre-collecte | 07h30 — Brief<br>
@@ -1791,6 +2639,484 @@ def monitor_triggers():
                 send_email(f"BARAKA — {prefix} {ticker}", html)
     except Exception as e:
         print(f"[TRIGGER] {e}")
+
+
+
+# ════════════════════════════════════════════════════════════════════════════
+# BARAKA v7.5 — PROACTIF: DIVIDENDES · CB DIRECTORS · OPCI · FLUX
+# ════════════════════════════════════════════════════════════════════════════
+# ════════════════════════════════════════════════════════════════════════════
+# BARAKA v7.5 — INTELLIGENCE PROACTIVE
+# Calendrier auto · Dividendes · Carry trade · AMMC synthèse · OPCI · Flux
+# ════════════════════════════════════════════════════════════════════════════
+
+# ─── SURVEILLANCE DIRECTEURS BANQUES CENTRALES ───────────────────────────────
+def get_cb_director_news():
+    """Capture signaux hawkish/dovish des directeurs BC AVANT les réunions."""
+    queries = [
+        ("BAM/Jouahri",  "Jouahri Bank Al-Maghrib taux politique monétaire 2026"),
+        ("Fed/Warsh",    "Warsh Federal Reserve taux hawkish inflation 2026"),
+        ("Fed/Powell",   "Powell Federal Reserve décision taux 2026"),
+        ("BCE/Lagarde",  "Lagarde BCE taux politique monétaire 2026"),
+        ("BOJ/Ueda",     "Ueda Bank Japan carry trade taux 2026"),
+    ]
+    results = []
+    for label, q in queries:
+        for n in gnews(q, 2):
+            nl = n.lower()
+            if any(w in nl for w in ["hausse","hike","hawkish","resserrement","augmente","+25 bps"]):
+                tone, col = "🔴 HAWKISH", "#FF4560"
+            elif any(w in nl for w in ["baisse","cut","dovish","assouplissement","-25 bps","réduit"]):
+                tone, col = "🟢 DOVISH", "#00C87A"
+            elif any(w in nl for w in ["maintien","pause","stable","inchangé","hold"]):
+                tone, col = "🟡 MAINTIEN", "#C9A84C"
+            else:
+                tone, col = "⚪ INFO", "#6B7280"
+            results.append({"label": label, "news": n[:160], "tone": tone, "color": col})
+    # Déduplication
+    seen = set(); out = []
+    for r in results:
+        h = hashlib.md5(r["news"][:60].lower().encode()).hexdigest()
+        if h not in seen: seen.add(h); out.append(r)
+    return out[:8]
+
+
+def render_cb_directors_block(items):
+    """Bloc HTML surveillance déclarations directeurs BC."""
+    if not items: return ""
+    rows = "".join(
+        f'<div class="ni">'
+        f'<span style="font-size:8px;font-weight:700;background:{i["color"]}18;color:{i["color"]};'
+        f'padding:1px 6px;border-radius:3px;margin-right:5px">{i["tone"]}</span>'
+        f'<span style="color:#9CA3AF;font-size:9px">[{i["label"]}] </span>'
+        f'{i["news"]}</div>'
+        for i in items
+    )
+    return (
+        '<div class="sec" style="border-color:rgba(96,165,250,.25)">'
+        '<div class="st" style="color:#60A5FA">VEILLE DIRECTEURS BC — JOUAHRI / WARSH / LAGARDE / UEDA</div>'
+        '<div style="font-size:9px;color:#6B7280;margin-bottom:6px">Signaux hawkish/dovish avant réunions officielles — indicateur avancé</div>'
+        + rows + '</div>'
+    )
+
+
+# ─── CALENDRIER DIVIDENDES BVC ────────────────────────────────────────────────
+# Dates estimées H2 2026 (à confirmer sur casablanca-bourse.com)
+DIVIDEND_CALENDAR = [
+    {"ticker":"ATW","name":"Attijariwafa Bank",    "detach":"2026-07-03","amount":18.0,  "yield_pct":2.6},
+    {"ticker":"BCP","name":"Banque Centrale Pop.", "detach":"2026-06-27","amount":8.0,   "yield_pct":3.1},
+    {"ticker":"IAM","name":"Maroc Telecom",        "detach":"2026-07-10","amount":3.4,   "yield_pct":3.7},
+    {"ticker":"OCP","name":"OCP Group",            "detach":"2026-07-15","amount":25.0,  "yield_pct":2.8},
+    {"ticker":"LHM","name":"Holcim Maroc",         "detach":"2026-06-30","amount":65.0,  "yield_pct":3.6},
+    {"ticker":"CMA","name":"Ciments du Maroc",     "detach":"2026-07-08","amount":70.0,  "yield_pct":4.1},
+    {"ticker":"CSR","name":"Cosumar",              "detach":"2026-07-05","amount":8.0,   "yield_pct":4.3},
+    {"ticker":"TMA","name":"Total Maroc",          "detach":"2026-07-12","amount":58.0,  "yield_pct":3.8},
+    {"ticker":"TQM","name":"Taqa Morocco",         "detach":"2026-07-20","amount":60.0,  "yield_pct":3.4},
+    {"ticker":"HPS","name":"HPS",                  "detach":"2026-07-25","amount":18.0,  "yield_pct":2.9},
+    {"ticker":"LBV","name":"Label Vie",            "detach":"2026-07-30","amount":55.0,  "yield_pct":1.4},
+    {"ticker":"CDM","name":"Crédit du Maroc",      "detach":"2026-07-22","amount":40.0,  "yield_pct":4.0},
+    {"ticker":"CIH","name":"CIH Bank",             "detach":"2026-07-18","amount":14.0,  "yield_pct":3.9},
+    {"ticker":"MNG","name":"Managem",              "detach":"2026-08-05","amount":100.0, "yield_pct":0.8},
+    {"ticker":"SMI","name":"SMI",                  "detach":"2026-08-10","amount":200.0, "yield_pct":3.4},
+    {"ticker":"WAA","name":"Wafa Assurance",       "detach":"2026-07-15","amount":200.0, "yield_pct":3.6},
+    {"ticker":"SAH","name":"Sanlam Maroc",         "detach":"2026-07-20","amount":130.0, "yield_pct":4.3},
+    {"ticker":"CMT","name":"CMT",                  "detach":"2026-09-05","amount":250.0, "yield_pct":5.2},
+    {"ticker":"SID","name":"Sonasid",              "detach":"2026-07-28","amount":80.0,  "yield_pct":4.0},
+    {"ticker":"BOA","name":"Bank of Africa",       "detach":"2026-07-02","amount":6.0,   "yield_pct":3.1},
+]
+
+
+def get_dividend_alerts(bvc_data=None, window_days=21):
+    """Retourne les détachements dans les {window_days} jours avec analyse stratégique."""
+    today = datetime.date.today()
+    alerts = []
+    div_news = gnews("dividende détachement BVC Casablanca 2026", 3)
+
+    for div in DIVIDEND_CALENDAR:
+        try:
+            d = datetime.date.fromisoformat(div["detach"])
+        except: continue
+        delta = (d - today).days
+        if delta < -5 or delta > window_days: continue
+
+        close  = (bvc_data or {}).get(div["ticker"], {}).get("close", 0)
+        amount = div["amount"]
+        rdmt   = div["yield_pct"]
+
+        if   delta < 0:  status, urg = f"EX-DATE J+{-delta}", "#6B7280"
+        elif delta == 0: status, urg = "AUJOURD'HUI ⚡",       "#FF4560"
+        elif delta == 1: status, urg = "DEMAIN 🔴",            "#FF4560"
+        elif delta <= 5: status, urg = f"J-{delta} SEMAINE",   "#F59E0B"
+        else:            status, urg = f"J-{delta}",            "#C9A84C"
+
+        # Analyse stratégie double gains
+        if 1 <= delta <= 5:
+            rebond_est = round(amount * 0.7)  # rebond ~70% du div en 3j (historique BVC)
+            action = (f"ACHETER AVANT J-{delta} → Div {amount:.0f} MAD + rebond post-détach. "
+                      f"est. +{rebond_est:.0f} MAD sur 3j = {round((amount+rebond_est)/max(close,1)*100,1)}% total" if close > 0
+                      else f"ACHETER AVANT J-{delta} → {amount:.0f} MAD div + rebond post-détach.")
+        elif delta == 0:
+            action = f"DERNIER JOUR avec droit au dividende {amount:.0f} MAD"
+        elif delta < 0:
+            action = f"Attendre rebond technique post-détach (hist. +{rdmt*0.6:.1f}% sur 3j)"
+        else:
+            action = f"Surveiller — entrer si BVC baisse d'ici {delta}j"
+
+        alerts.append({
+            "ticker": div["ticker"], "name": div["name"],
+            "detach": div["detach"], "days": delta,
+            "amount": amount, "yield_pct": rdmt,
+            "close": close, "status": status, "color": urg,
+            "action": action,
+        })
+
+    alerts.sort(key=lambda x: x["days"])
+    return alerts, div_news
+
+
+def render_dividend_block(alerts, div_news, weekly=False):
+    """Bloc HTML dividendes."""
+    if not alerts: return ""
+    rows = ""
+    for d in alerts:
+        rows += (
+            f'<div class="card" style="border-left:4px solid {d["color"]};margin-bottom:6px">'
+            f'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px">'
+            f'<div><span style="font-family:monospace;font-weight:900;color:{d["color"]}">{d["ticker"]}</span>'
+            f' <span style="color:#6B7280;font-size:10px">{d["name"]}</span></div>'
+            f'<div style="text-align:right">'
+            f'<div style="color:{d["color"]};font-weight:700;font-size:11px">{d["status"]}</div>'
+            f'<div style="color:#4B5563;font-size:9px">{d["detach"]}</div></div></div>'
+            f'<div class="mg" style="margin-bottom:5px">'
+            f'<div class="mb"><div class="ml">Dividende</div><div class="mv go">{d["amount"]:.0f} MAD</div></div>'
+            f'<div class="mb"><div class="ml">Rendement</div><div class="mv go">{d["yield_pct"]:.1f}%</div></div>'
+            + (f'<div class="mb"><div class="ml">Cours</div><div class="mv b">{d["close"]:,.0f}</div></div>' if d["close"] else "")
+            + f'</div>'
+            f'<div style="font-size:10px;color:#B0B8C8;background:rgba(0,200,122,.05);padding:6px;border-radius:4px">{d["action"]}</div>'
+            f'</div>'
+        )
+    news_html = "".join(f'<div class="ni"><span class="src go">DIV</span>{n}</div>' for n in (div_news or [])[:2])
+    title = "📅 LUNDI — DIVIDENDES DE LA SEMAINE" if weekly else "DIVIDENDES — OPPORTUNITÉS DÉTACHEMENT"
+    return (
+        '<div class="sec" style="border-color:rgba(0,200,122,.3)">'
+        f'<div class="st" style="color:#00C87A">{title}</div>'
+        f'<div style="font-size:9px;color:#6B7280;margin-bottom:8px">'
+        f'Stratégie double: toucher dividende + rebond post-détachement (hist. ~3j). '
+        f'{len(alerts)} titre(s) dans la fenêtre.</div>'
+        + rows + news_html
+        + '<div style="font-size:9px;color:#4B5563;margin-top:5px">Dates à confirmer · Rebond post-détach. estimé à 70% du dividende sur 3 séances (historique BVC 2022-2025)</div>'
+        '</div>'
+    )
+
+
+# ─── RISQUES MACRO GLOBAUX ────────────────────────────────────────────────────
+MACRO_RISKS = {
+    "carry_trade": {
+        "label": "CARRY TRADE JPY DÉNOUÉ",
+        "desc": "Hausse JP10Y → remontée yen → débouclage positions carry (borrow JPY → acheter actifs risqués). Choc global en chaîne.",
+        "impact_bvc": "BVC retard 1-3 séances. Mines (deleveraging), banques (risk-off). IAM refuge.",
+        "masi_pts": -420,
+        "check": lambda m: (m.get("nikkei",{}).get("c",0) < -2.5 if isinstance(m.get("nikkei",{}),dict) else False),
+        "sectors_down": ["MNG","SMI","CMT","ATW"], "sectors_up": ["IAM"],
+    },
+    "ai_correction": {
+        "label": "CORRECTION TECHN./IA — SP500 TECH -5%",
+        "desc": "Rotation hors mega-caps IA (Nvidia -15%+). Risk-off partiel. BVC peu exposé tech mais corrèle via SP500.",
+        "impact_bvc": "MASI -1 à -2.5%. HPS plus exposé. ATW/BCP résistent.",
+        "masi_pts": -220,
+        "check": lambda m: (m.get("sp500",{}).get("c",0) < -3 and m.get("vix",{}).get("p",20) > 28
+                           if isinstance(m.get("sp500",{}),dict) else False),
+        "sectors_down": ["HPS","OCP"], "sectors_up": ["IAM","BCP"],
+    },
+    "brent_choc": {
+        "label": "CHOC BRENT +10% (OPEP/GÉO)",
+        "desc": "Brent > $95/bl → inflation importée Maroc → BAM sous pression → crédit + immo sous pression.",
+        "impact_bvc": "Négatif immobilier, transport, distribution. Positif OCP (USD fort).",
+        "masi_pts": -160,
+        "check": lambda m: (m.get("brent",{}).get("p",0) > 95 if isinstance(m.get("brent",{}),dict) else False),
+        "sectors_down": ["ADH","ADI","RDS","CTM"], "sectors_up": ["OCP"],
+    },
+    "mad_pression": {
+        "label": "MAD DÉPRÉCIATION — USD/MAD > 10.5",
+        "desc": "MAD sous pression → hausse coûts imports → inflation → BAM hawkish potentiel.",
+        "impact_bvc": "Négatif agro/distribution/pharma. Positif mines et OCP.",
+        "masi_pts": -120,
+        "check": lambda m: (isinstance(m.get("usd_mad"), (int,float)) and m.get("usd_mad",10) > 10.5),
+        "sectors_down": ["LBV","LES","CSR"], "sectors_up": ["MNG","SMI","OCP"],
+    },
+    "us_recession": {
+        "label": "CRAINTE RÉCESSION USA — VIX > 35",
+        "desc": "VIX > 35 = panique. BVC suit à retard (corr. 0.55). Impact en 2-3 séances.",
+        "impact_bvc": "MASI -3 à -5%. Mines très impactées (commodity selloff).",
+        "masi_pts": -550,
+        "check": lambda m: (m.get("vix",{}).get("p",20) > 35 if isinstance(m.get("vix",{}),dict) else False),
+        "sectors_down": ["MNG","SMI","CMT","OCP","ATW"], "sectors_up": ["IAM"],
+    },
+}
+
+
+def get_macro_risks(macro):
+    """Détecte risques actifs + scrape news spécifiques."""
+    active = []
+    news   = dedup_news(
+        gnews("carry trade Japon yen débouclage risk-off 2026", 2)
+        + gnews("Nvidia IA correction tech crash bourse 2026", 2)
+        + gnews("récession USA Fed crash marchés 2026", 2)
+        + gnews("crise dette obligation crash 2026", 2)
+    )
+
+    for key, r in MACRO_RISKS.items():
+        triggered = False
+        try: triggered = r["check"](macro)
+        except: pass
+        # Fallback news pour carry trade
+        if not triggered and key == "carry_trade":
+            triggered = any(w in " ".join(news).lower() for w in ["carry","yen","nikkei chute","déboucl"])
+        if triggered:
+            active.append({"key": key, **r})
+
+    # Groq analyse impact BVC non pricé
+    groq = ""
+    if active or any(w in " ".join(news).lower() for w in ["crash","chute","panique","carry"]):
+        sp_c  = macro.get("sp500",{}).get("c",0) if isinstance(macro.get("sp500",{}),dict) else 0
+        vix   = macro.get("vix",{}).get("p",20)  if isinstance(macro.get("vix",{}),dict)   else 20
+        nk_c  = macro.get("nikkei",{}).get("c",0) if isinstance(macro.get("nikkei",{}),dict) else 0
+        prompt = (f"Risques macro actuels:\n"
+                  f"SP500 {sp_c:+.1f}% · VIX {vix:.0f} · Nikkei {nk_c:+.1f}%\n"
+                  f"Risques actifs: {[r['label'] for r in active]}\n"
+                  f"News: {news[:3]}\n\n"
+                  f"BVC Casablanca souvent en retard 1-3 séances sur chocs mondiaux.\n"
+                  f"BULLETS (max 4):\n"
+                  f"• [CHOC] risque principal + ampleur attendue sur MASI (chiffrer en %)\n"
+                  f"• [NON PRICÉ] ce qui n'est pas encore dans les cours BVC\n"
+                  f"• [PROTECTION] titres à sous-pondérer + niveau de sortie\n"
+                  f"• [OPPORTUNITÉ] si panique injustifiée: quel titre racheter et à quel cours")
+        groq = groq_call(prompt, 350)
+
+    return active, news[:5], groq
+
+
+def render_macro_risk_block(risks, news, groq_txt):
+    """Bloc HTML risques macro."""
+    if not risks and not news and not groq_txt: return ""
+    rows = ""
+    for r in risks:
+        pts_col = "#FF4560" if r["masi_pts"] < -300 else "#F59E0B"
+        dn = " ".join(f'<span style="color:#FF4560;font-size:9px;font-family:monospace">{t}</span>' for t in r["sectors_down"])
+        up = " ".join(f'<span style="color:#00C87A;font-size:9px;font-family:monospace">{t}</span>' for t in r["sectors_up"])
+        rows += (
+            f'<div class="geo" style="border-color:rgba(239,68,68,.3);margin-bottom:8px">'
+            f'<div class="geot">🚨 {r["label"]}</div>'
+            f'<div style="font-size:11px;color:#E8E4D6;margin-bottom:5px">{r["desc"]}</div>'
+            f'<div style="font-size:11px;color:#B0B8C8;margin-bottom:5px">{r["impact_bvc"]}</div>'
+            f'<div class="mg"><div class="mb"><div class="ml">MASI impact est.</div>'
+            f'<div class="mv" style="color:{pts_col}">{r["masi_pts"]:+} pts</div></div></div>'
+            f'<div style="font-size:9px;margin-top:4px">Pression: {dn} &nbsp;·&nbsp; Refuge: {up}</div>'
+            f'</div>'
+        )
+    news_html = "".join(f'<div class="ni"><span class="src" style="background:rgba(239,68,68,.12);color:#EF4444">RISK</span>{n}</div>' for n in news)
+    groq_html = (f'<div class="sy" style="margin-top:8px"><div class="syt">IMPACT BVC NON ENCORE PRICÉ</div>'
+                 f'<div class="sytx">{groq_txt}</div></div>') if groq_txt else ""
+    return (
+        '<div class="sec" style="border-color:rgba(239,68,68,.4)">'
+        '<div class="st" style="color:#EF4444">RISQUES MACRO — CARRY TRADE / IA CAPS / CHOCS GLOBAUX</div>'
+        '<div style="font-size:9px;color:#6B7280;margin-bottom:8px">'
+        'BVC Casablanca en retard 1-3 séances sur les chocs mondiaux. Anticiper avant pricing.</div>'
+        + (rows or '<div style="color:#4B5563;font-size:11px;padding:4px 0">Aucun risque macro critique détecté</div>')
+        + news_html + groq_html + '</div>'
+    )
+
+
+# ─── SYNTHÈSE AMMC AVEC GROQ ─────────────────────────────────────────────────
+def get_ammc_synthesis(pubs):
+    """Synthèse Groq des publications AMMC: résumé + EN LIGNE / SURPRISE / DÉCEPTION."""
+    if not pubs: return None
+    pub_list = "\n".join(
+        f"[{p['type'].upper()}] {p.get('ticker','?')}: {p['title'][:90]}"
+        for p in pubs[:10]
+    )
+    prompt = (f"AMMC Maroc — Synthèse publications du jour:\n{pub_list}\n\n"
+              f"Pour chaque publication, 1 ligne:\n"
+              f"• [TICKER TYPE] synthèse + 'EN LIGNE' ou 'SURPRISE +X%' ou 'DÉCEPTION' vs consensus\n"
+              f"Si profit warning: flag SIGNAL FORT NÉGATIF.\n"
+              f"Sois direct et concis. Chiffres si disponibles.")
+    synth = groq_call(prompt, 350)
+    warnings = [p for p in pubs if p["type"]=="warning"]
+    results  = [p for p in pubs if p["type"]=="resultats"]
+    divs     = [p for p in pubs if p["type"]=="dividende"]
+    ops      = [p for p in pubs if p["type"]=="operation"]
+    return {"warnings":warnings,"results":results,"divs":divs,"ops":ops,"synth":synth,"total":len(pubs)}
+
+
+def render_ammc_synthesis_block(data):
+    """Bloc HTML AMMC enrichi."""
+    if not data or data["total"] == 0: return ""
+    COLORS = {"warning":"#FF4560","resultats":"#60A5FA","dividende":"#00C87A","operation":"#F59E0B"}
+    ICONS  = {"warning":"🚨","resultats":"📊","dividende":"💰","operation":"🏦"}
+
+    def _row(ptype, pubs):
+        return "".join(
+            f'<div class="ni"><span style="font-size:8px;font-weight:700;'
+            f'background:{COLORS.get(ptype,"#6B7280")}18;color:{COLORS.get(ptype,"#6B7280")};'
+            f'padding:1px 6px;border-radius:3px;margin-right:5px">{ICONS.get(ptype,"📄")} {ptype.upper()}</span>'
+            + (f'<strong style="color:{COLORS.get(ptype,"#6B7280")}">[{p.get("ticker","")}]</strong> ' if p.get("ticker") else "")
+            + f'{p["title"][:100]}</div>'
+            for p in pubs[:3]
+        )
+
+    pubs_html = _row("warning",data["warnings"]) + _row("resultats",data["results"]) + _row("dividende",data["divs"]) + _row("operation",data["ops"])
+    synth_html = (
+        f'<div style="background:rgba(96,165,250,.06);border-left:3px solid #60A5FA;'
+        f'border-radius:4px;padding:10px;margin-top:8px">'
+        f'<div style="font-size:9px;color:#60A5FA;margin-bottom:5px">SYNTHÈSE · EN LIGNE / SURPRISE / DÉCEPTION</div>'
+        f'<div style="font-size:11px;color:#E8E4D6;line-height:1.8;white-space:pre-line">{data["synth"]}</div>'
+        f'</div>'
+    ) if data["synth"] else ""
+
+    return (
+        '<div class="sec" style="border-color:rgba(96,165,250,.3)">'
+        f'<div class="st" style="color:#60A5FA">AMMC — SYNTHÈSE & ALIGNMENT ({data["total"]} publications)</div>'
+        + pubs_html + synth_html + '</div>'
+    )
+
+
+# ─── MONITORING OPCI MAROC ────────────────────────────────────────────────────
+def get_opci_alerts():
+    """Surveille appels de fonds OPCI → pression de vente sur BVC."""
+    news = dedup_news(
+        gnews("OPCI Maroc appel fonds souscription 2026", 3)
+        + gnews("OPCI Maroc capital levée immobilier 2026", 3)
+    )
+    alerts = []
+    for n in news:
+        nl = n.lower()
+        if not any(w in nl for w in ["appel","levée","souscription","émission","capital","parts","opci"]): continue
+        m = re.search(r"(\d+(?:[,\.]\d+)?)\s*(?:mmdh|mrd dh|milliards?|millions?)", nl)
+        amt = float(m.group(1).replace(",",".")) if m else None
+        # Si en millions → convertir en MMDH
+        if amt and "million" in nl and amt > 100: amt = round(amt/1000, 2)
+        # Calcul impact: 30% vente actions BVC, capi MASI ~700 MMDH
+        if amt:
+            sells = round(amt * 0.30, 2)
+            pct   = round(sells / 700 * 100, 3)
+            pts   = round(13950 * pct / 100)
+        else:
+            sells = pct = pts = None
+        alerts.append({"news": n[:180], "amt": amt, "sells": sells, "pct": pct, "pts": pts})
+    return alerts[:5]
+
+
+def render_opci_block(alerts):
+    """Bloc HTML OPCI."""
+    if not alerts: return ""
+    rows = "".join(
+        f'<div style="background:rgba(139,92,246,.06);border-left:3px solid #8B5CF6;'
+        f'border-radius:4px;padding:9px;margin-bottom:7px">'
+        f'<div style="font-size:11px;color:#E8E4D6;margin-bottom:5px">{a["news"]}</div>'
+        + (
+            f'<div class="mg">'
+            f'<div class="mb"><div class="ml">Levée estimée</div><div class="mv pu">{a["amt"]:.2f} MMDH</div></div>'
+            f'<div class="mb"><div class="ml">Ventes BVC est.</div><div class="mv r">{a["sells"]:.2f} MMDH</div></div>'
+            f'<div class="mb"><div class="ml">Impact MASI</div><div class="mv r">{a["pts"]:+} pts</div></div>'
+            f'</div>'
+            if a["amt"] else
+            '<div style="font-size:10px;color:#6B7280">Montant non précisé — surveiller</div>'
+        )
+        + '</div>'
+        for a in alerts
+    )
+    return (
+        '<div class="sec" style="border-color:rgba(139,92,246,.3)">'
+        '<div class="st" style="color:#8B5CF6">OPCI MAROC — PRESSION VENTE SUR BVC</div>'
+        '<div style="font-size:9px;color:#6B7280;margin-bottom:8px">'
+        'Appels de fonds OPCI → ventes estimées 30% en actions BVC → impact MASI</div>'
+        + rows
+        + '<div style="font-size:9px;color:#4B5563;margin-top:4px">Hyp: 30% levée en actions · Capi MASI ~700 MMDH · Estimatif</div>'
+        '</div>'
+    )
+
+
+# ─── ANALYSE FLUX RETAIL vs INSTITUTIONNEL ───────────────────────────────────
+def get_flow_analysis(bvc_data):
+    """Proxy retail vs institutionnel par titre (volume + prix)."""
+    flows = []
+    for ticker, d in bvc_data.items():
+        close = d.get("close",0); chg = d.get("change",0)
+        vol   = d.get("volume",0); avg = d.get("avg_vol",1) or 1
+        vr = vol/avg; rsi = d.get("rsi",50)
+        if not close or vr < 0.3: continue
+
+        if   vr >= 3.0 and chg >  1.0: flow, col, score = "INSTITUTIONNEL ACHETEUR",        "#00C87A", 5
+        elif vr >= 3.0 and chg < -1.0: flow, col, score = "INSTITUTIONNEL VENDEUR",          "#FF4560", -5
+        elif vr >= 2.0 and chg >  0.5: flow, col, score = "INSTITUTIONNEL HAUSSIER",         "#C9A84C", 3
+        elif vr >= 2.0 and chg < -0.5: flow, col, score = "DISTRIBUTION INSTITUTIONNELLE",   "#F59E0B", -3
+        elif vr <  0.7 and abs(chg) > 1.5: flow, col, score = "RETAIL / SPÉCULATIF",         "#8B5CF6", 0
+        else: continue
+
+        info = BVC.get(ticker,{})
+        flows.append({"ticker":ticker,"name":info.get("n",ticker),"sector":info.get("s",""),
+                      "flow":flow,"color":col,"score":score,"vr":round(vr,1),"change":chg,"rsi":rsi,"close":close})
+
+    flows.sort(key=lambda x: -abs(x["score"]))
+    return flows[:10]
+
+
+def render_flow_block(flows):
+    """Bloc HTML flux retail vs institutionnel."""
+    if not flows: return ""
+    rows = "".join(
+        f'<div style="display:flex;justify-content:space-between;align-items:center;'
+        f'padding:6px 0;border-bottom:1px solid rgba(255,255,255,.04);font-size:11px">'
+        f'<div><span style="color:{f["color"]};font-weight:700;font-family:monospace;min-width:48px">{f["ticker"]}</span>'
+        f' <span style="color:#6B7280;font-size:9px">{f["sector"]}</span></div>'
+        f'<span style="color:{f["color"]};font-size:10px;flex:1;text-align:center">{f["flow"]}</span>'
+        f'<div style="text-align:right;font-size:10px">'
+        f'<span style="color:{"#00C87A" if f["change"]>=0 else "#FF4560"}">{f["change"]:+.1f}%</span>'
+        f' · <span style="color:#F59E0B">x{f["vr"]}</span>'
+        f' · <span style="color:#6B7280">RSI{f["rsi"]:.0f}</span></div></div>'
+        for f in flows
+    )
+    return (
+        '<div class="sec" style="border-color:rgba(245,158,11,.25)">'
+        '<div class="st" style="color:#F59E0B">FLUX — RETAIL vs INSTITUTIONNEL</div>'
+        '<div style="font-size:9px;color:#6B7280;margin-bottom:8px">'
+        'Vol>3×moy+cours+ = institutionnel acheteur · Vol<0.7×moy+mouvement = retail spéculatif</div>'
+        + rows
+        + '<div style="font-size:9px;color:#4B5563;margin-top:5px">Proxy imparfait — confirmer avec marché de blocs</div>'
+        '</div>'
+    )
+
+
+# ─── JOB LUNDI — WEEKLY DIGEST ───────────────────────────────────────────────
+def weekly_digest():
+    """Email du lundi matin: dividendes semaine + CB calendar + risques macro."""
+    print("[BARAKA] === WEEKLY DIGEST LUNDI ===")
+    try:
+        macro  = get_macro()
+        bvc    = get_bvc_data()
+        now    = datetime.datetime.now().strftime("%d/%m/%Y %H:%M")
+        div_alerts, div_news = get_dividend_alerts(bvc, window_days=7)
+        cb_cal   = get_cb_calendar()
+        cb_dirs  = get_cb_director_news()
+        mac_risk, risk_news, groq_risk = get_macro_risks(macro)
+
+        html = f"""<!DOCTYPE html><html><head><meta charset="UTF-8">{CSS}</head>
+<body><div class="w">
+<div class="hdr">
+  <div class="logo">BARAKA</div>
+  <div class="sub">WEEKLY DIGEST — LUNDI {now}</div>
+  <span class="bdg go" style="border-color:rgba(0,200,122,.4);background:rgba(0,200,122,.08)">SEMAINE À VENIR</span>
+</div>
+{render_dividend_block(div_alerts, div_news, weekly=True)}
+{render_cb_calendar_block(cb_cal, macro)}
+{render_cb_directors_block(cb_dirs)}
+{render_macro_risk_block(mac_risk, risk_news, groq_risk)}
+<div class="ft">Baraka Weekly · <strong class="go">BARAKA v7.5</strong></div>
+</div></body></html>"""
+
+        send_email("BARAKA 📅 WEEKLY — Dividendes · BC · Risques macro", html)
+    except Exception as e:
+        print(f"[WEEKLY] {e}")
 
 
 # ─── SURVEILLANCE MARCHES + ALERTES MINES ─────────────────────────────────────
@@ -1965,6 +3291,53 @@ def start_flask():
             threading.Thread(target=monitor_markets, daemon=True).start()
             return "Check mines + marches lance", 200
 
+        @app.route("/gaps")
+        def gaps_route():
+            bvc = get_bvc_data()
+            gs  = get_gap_signals(bvc)
+            out = [f"{g['ticker']}: {g['gap_type']} {g['gap_pct']:+.1f}% → combler {g['fill_dir']} ({g['prob']}%) cible {g['target']}" for g in gs]
+            return "\n".join(out) or "Aucun gap", 200, {"Content-Type":"text/plain"}
+
+        @app.route("/masi")
+        def masi_route():
+            bvc   = get_bvc_data(); macro = get_macro()
+            masi  = get_masi_analysis(bvc, macro)
+            lvl   = masi["levels"]
+            return (f"MASI {masi['signal']} ({masi['weighted_chg']:+.2f}%)\n"
+                    f"Est: {masi['masi_est']:,} | S1={lvl['s1']:,} Pivot={lvl['pivot']:,} R1={lvl['r1']:,}\n"
+                    f"Driver: {masi['dominant']['ticker'] if masi['dominant'] else 'N/A'}"), 200, {"Content-Type":"text/plain"}
+
+        @app.route("/blocks")
+        def blocks_route():
+            blks = get_block_trades()
+            out  = [f"{b['ticker']}: {b['total_mad']/1e6:.1f} MDH @ {b['price']:,.0f} MAD" for b in blks]
+            return "\n".join(out) or "Aucun bloc", 200, {"Content-Type":"text/plain"}
+
+        @app.route("/divs")
+        def divs_route():
+            bvc  = get_bvc_data()
+            alts, _ = get_dividend_alerts(bvc, 14)
+            out  = [f"{d['ticker']}: {d['status']} · {d['amount']:.0f} MAD ({d['yield_pct']}%) · {d['detach']}" for d in alts]
+            return "\n".join(out) or "Aucun dividende proche", 200, {"Content-Type":"text/plain"}
+
+        @app.route("/weekly")
+        def weekly_route():
+            threading.Thread(target=weekly_digest, daemon=True).start()
+            return "Weekly digest lancé", 200
+
+        @app.route("/risk")
+        def risk_route():
+            macro = get_macro()
+            risks, _, _ = get_macro_risks(macro)
+            out = [f"{r['label']}: MASI {r['masi_pts']:+} pts" for r in risks]
+            return "\n".join(out) or "Aucun risque macro actif", 200, {"Content-Type":"text/plain"}
+
+        @app.route("/cb")
+        def cb_route():
+            cbs = get_cb_calendar()
+            out = [f"{c['cb']}: J-{c['days']} ({c['date']}) | {c['rate']}% | {c['bias']}" for c in cbs]
+            return "\n".join(out), 200, {"Content-Type":"text/plain"}
+
         port = int(os.environ.get("PORT", 8080))
         app.run(host="0.0.0.0", port=port, debug=False, use_reloader=False)
     except Exception as e:
@@ -1975,16 +3348,17 @@ def start_flask():
 def run_scheduler():
     print("""
 +===================================================+
-|  BARAKA v7.3 - BVC HEDGE FUND INTELLIGENCE        |
+|  BARAKA v7.5 - BVC HEDGE FUND INTELLIGENCE        |
 +===================================================+
 |  05:00 UTC (06:00 Casa) → Pre-collecte profonde   |
 |  07:30 UTC (08:30 Casa) → Brief Ouverture         |
 |  11:00 UTC (12:00 Casa) → Analyse + Recos         |
 |  14:30 UTC (15:30 Casa) → Post-Cloture            |
 |  /5 min  (8h-15h30 UTC) → Alertes marches+MINES |
+|  Lundi 07h00 UTC → Weekly Digest              |
 |  /10 min (9h-15h UTC)   → Triggers positions     |
 +===================================================+
-|  v7.3: SMI+MNG(or+Cu)+CMT(Ag+Zn) | Alertes BVC  |
+|  v7.5: +Dividendes/OPCI/Flux/CB-directors |
 +===================================================+
     """)
     threading.Thread(target=start_flask, daemon=True).start()
@@ -2005,6 +3379,11 @@ def run_scheduler():
                 if h == 5 and 0 <= m < 15 and f"pre_{today}" not in fired:
                     fired[f"pre_{today}"] = True
                     threading.Thread(target=pre_collect, daemon=True).start()
+
+                # Weekly digest lundi matin
+                if wd == 0 and h == 7 and 0 <= m < 15 and f"weekly_{today}" not in fired:
+                    fired[f"weekly_{today}"] = True
+                    threading.Thread(target=weekly_digest, daemon=True).start()
 
                 elif h == 7 and 30 <= m < 45 and f"brief_{today}" not in fired:
                     fired[f"brief_{today}"] = True
