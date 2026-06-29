@@ -2284,7 +2284,7 @@ BULLETS (max 6):
 
 {render_seasonal_block(get_seasonal_alert())}
 
-{render_cb_directors_block(get_cb_director_news())}
+{render_cb_directors_block(cb_dirs_brief)}
 <div class="sec"><div class="st">PUBLICATIONS AMMC</div>{ammc_html}</div>
 <div class="sec"><div class="st">NEWS BVC — BOURSENEWS</div>{bn_html}</div>
 <div class="sec"><div class="st">INTELLIGENCE SOCIALE</div>{soc_html}</div>
@@ -2316,6 +2316,34 @@ def analyse_entrees():
         sm = smart_money(bvc_data)
         mining_data = mining_intelligence(bvc_data, macro)
 
+        # ── [v7.4/v7.5] MODULES INTELLIGENCE — assignations obligatoires ───────
+        global bvc_data_cache; bvc_data_cache = bvc_data
+        try:    masi_data    = get_masi_analysis(bvc_data, macro)
+        except: masi_data    = None
+        try:    gap_signals  = get_gap_signals(bvc_data)
+        except: gap_signals  = []
+        try:    block_trades = get_block_trades()
+        except: block_trades = []
+        try:    cb_calendar  = get_cb_calendar()
+        except: cb_calendar  = []
+        try:    seasonal_al  = get_seasonal_alert()
+        except: seasonal_al  = []
+        try:    sector_rot   = get_sector_rotation_signal(macro, bvc_data)
+        except: sector_rot   = []
+        try:    flow_signals = get_flow_analysis(bvc_data)
+        except: flow_signals = []
+        try:    div_alerts, div_news = get_dividend_alerts(bvc_data, window_days=7)
+        except: div_alerts, div_news = [], []
+        try:    mac_risks, risk_news, groq_risk = get_macro_risks(macro)
+        except: mac_risks, risk_news, groq_risk = [], [], ""
+        try:    opci_al      = get_opci_alerts()
+        except: opci_al      = []
+        try:    ammc_synth   = get_ammc_synthesis(ammc_pubs)
+        except: ammc_synth   = None
+        try:    cb_dirs      = get_cb_director_news()
+        except: cb_dirs      = []
+        # ──────────────────────────────────────────────────────────────────────
+
         geo_all = []
         for v in (geo.values() if isinstance(geo,dict) else []):
             if isinstance(v,list): geo_all += v
@@ -2333,6 +2361,16 @@ def analyse_entrees():
 
         update_scorecard(bvc_data); log_recos(reco_day + reco_week + reco_qtr)
         sc_stats = scorecard_stats()
+
+        # ── [v7.5] CONVICTION CALL ────────────────────────────────────────────
+        try:
+            best_buy_cc, best_sell_cc, groq_cc = get_conviction_call(
+                bvc_data, macro, masi_data, gap_signals, flow_signals,
+                seasonal_al, sector_rot, div_alerts, trans_signals, ammc_pubs
+            )
+        except Exception as _cc_e:
+            print(f"[CC] {_cc_e}"); best_buy_cc = best_sell_cc = groq_cc = None
+        # ──────────────────────────────────────────────────────────────────────
 
         # ── [v7.2] Bloc élasticité mines (avec cours BVC réels) ──────────────
         _elast_full = render_elasticity_block(bvc_data, macro)
@@ -2412,6 +2450,8 @@ def analyse_entrees():
 
 {f'<div class="geo"><div class="geot">ALERTES CRISE</div>{crisis_banner}</div>' if crisis_banner else ""}
 
+{render_conviction_call(best_buy_cc, best_sell_cc, groq_cc)}
+
 {render_mining_block(mining_data, macro)}
 
 {render_masi_block(masi_data, macro, geo)}
@@ -2426,15 +2466,15 @@ def analyse_entrees():
 
 {render_sector_rotation_block(sector_rot)}
 
-{render_ammc_synthesis_block(get_ammc_synthesis(ammc_pubs))}
+{render_ammc_synthesis_block(ammc_synth)}
 
-{render_flow_block(get_flow_analysis(bvc_data))}
+{render_flow_block(flow_signals)}
 
-{render_macro_risk_block(*get_macro_risks(macro))}
+{render_macro_risk_block(mac_risks, risk_news, groq_risk)}
 
-{render_opci_block(get_opci_alerts())}
+{render_opci_block(opci_al)}
 
-{render_dividend_block(*get_dividend_alerts(bvc_data, window_days=7))}
+{render_dividend_block(div_alerts, div_news)}
 
 {_elast_full}
 
@@ -3119,6 +3159,294 @@ def weekly_digest():
         print(f"[WEEKLY] {e}")
 
 
+
+# ════════════════════════════════════════════════════════════════════════════
+# BARAKA CONVICTION CALL — MULTI-SIGNAL ALIGNMENT
+# ════════════════════════════════════════════════════════════════════════════
+# ════════════════════════════════════════════════════════════════════════════
+# BARAKA CONVICTION CALL — LE TRADE DU JOUR
+# ════════════════════════════════════════════════════════════════════════════
+# Agrège TOUS les signaux Baraka sur chaque titre et identifie le setup
+# où le maximum d'indicateurs s'alignent. Quand 6+/8 signaux concordent
+# sur UN titre → CONVICTION CALL avec confiance chiffrée.
+# Inspiré des systèmes multi-signal des hedge funds quantitatifs.
+# ════════════════════════════════════════════════════════════════════════════
+
+def _conviction_score(ticker, d, macro, masi_data, gap_signals, flow_signals,
+                       seasonal_al, sector_rot, div_alerts, trans_signals):
+    """
+    Score 0-10 basé sur l'alignement de 10 facteurs indépendants.
+    Chaque facteur contribue 0 (neutre) +1 (haussier) ou -1 (baissier).
+    Score net > 0 = conviction ACHAT. Score net < 0 = conviction VENTE/ÉVITER.
+    """
+    info  = BVC.get(ticker, {})
+    close = d.get("close", 0)
+    rsi   = d.get("rsi", 50)
+    chg   = d.get("change", 0)
+    vol   = d.get("volume", 0); avg = d.get("avg_vol", 1) or 1
+    vr    = vol / avg
+    macd  = d.get("macd", 0); macd_s = d.get("macd_s", 0)
+    ema20 = d.get("ema20", 0)
+    adx   = d.get("adx", 0)
+    sect  = info.get("s", "")
+
+    factors = {}
+
+    # 1. RSI / momentum
+    if   rsi < 30:            factors["RSI survente"]   = +1
+    elif rsi > 70:            factors["RSI surachat"]   = -1
+    elif 35 < rsi < 55:       factors["RSI neutre"]     =  0
+    else:                     factors["RSI intermédiaire"] = 0
+
+    # 2. MACD + EMA20
+    if macd > macd_s and close > ema20 > 0:
+        factors["MACD + EMA20 haussier"] = +1
+    elif macd < macd_s and close < ema20:
+        factors["MACD + EMA20 baissier"] = -1
+    else:
+        factors["MACD neutre"] = 0
+
+    # 3. Volume institutionnel
+    if   vr >= 3.0 and chg > 0.5:  factors["Volume institutionnel acheteur"] = +1
+    elif vr >= 3.0 and chg < -0.5: factors["Volume institutionnel vendeur"]  = -1
+    elif vr >= 2.0:                 factors["Volume élevé"]                   = +1
+    else:                           factors["Volume normal"] = 0
+
+    # 4. Gap technique à combler
+    gap_ticker = next((g for g in gap_signals if g["ticker"] == ticker), None)
+    if gap_ticker:
+        if gap_ticker["fill_dir"] == "HAUSSE" and gap_ticker["prob"] >= 65:
+            factors[f"Gap {gap_ticker['gap_pct']:+.1f}% → rebond"] = +1
+        elif gap_ticker["fill_dir"] == "BAISSE" and gap_ticker["prob"] >= 65:
+            factors[f"Gap {gap_ticker['gap_pct']:+.1f}% → comblement"] = -1
+        else:
+            factors["Gap neutre"] = 0
+    else:
+        factors["Pas de gap"] = 0
+
+    # 5. MASI big cap contribution
+    if masi_data and ticker in MASI_WEIGHTS:
+        wchg = masi_data.get("weighted_chg", 0)
+        if   wchg > 0.5:  factors["MASI haussier (big cap)"] = +1
+        elif wchg < -0.5: factors["MASI baissier (big cap)"] = -1
+        else:              factors["MASI neutre"] = 0
+    else:
+        factors["Hors MASI"] = 0
+
+    # 6. Élasticité minière (pour SMI, MNG, CMT)
+    ag = macro.get("silver",{}).get("c",0) if isinstance(macro.get("silver",{}),dict) else 0
+    au = macro.get("gold",{}).get("c",0)   if isinstance(macro.get("gold",{}),dict)   else 0
+    if ticker == "SMI":
+        if   ag > 1.0:  factors["Argent +1% → SMI"] = +1
+        elif ag < -1.0: factors["Argent -1% → SMI"] = -1
+        else:            factors["Argent neutre"] = 0
+    elif ticker == "MNG":
+        if   au > 1.0:  factors["Or +1% → MNG"]  = +1
+        elif au < -1.0: factors["Or -1% → MNG"]   = -1
+        else:            factors["Or neutre"] = 0
+    elif ticker == "CMT":
+        if   ag > 1.0:  factors["Argent +1% → CMT"] = +1
+        elif ag < -1.0: factors["Argent -1% → CMT"] = -1
+        else:            factors["Argent neutre CMT"] = 0
+    else:
+        factors["Non minier"] = 0
+
+    # 7. Rotation sectorielle
+    sect_sig = next((s for s in sector_rot if s["sector"] == sect), None)
+    if sect_sig:
+        if   sect_sig["score"] >= 2:  factors[f"Secteur {sect} SURPONDÉRÉ"]  = +1
+        elif sect_sig["score"] <= -2: factors[f"Secteur {sect} SOUS-PONDÉRÉ"] = -1
+        else:                          factors[f"Secteur {sect} neutre"] = 0
+    else:
+        factors["Secteur sans signal"] = 0
+
+    # 8. Saisonnalité
+    sea_buy  = any(ticker in a.get("plays",[]) for a in seasonal_al if a["bias"]=="HAUSSIER")
+    sea_avoid= any(ticker in a.get("avoid",[]) for a in seasonal_al)
+    if   sea_buy:   factors["Saisonnalité favorable"] = +1
+    elif sea_avoid: factors["Saisonnalité défavorable"] = -1
+    else:            factors["Saisonnalité neutre"] = 0
+
+    # 9. Dividende proche (catalyseur)
+    div_t = next((dv for dv in div_alerts if dv["ticker"]==ticker and 0 < dv["days"] <= 5), None)
+    if div_t:
+        factors[f"Dividende J-{div_t['days']} ({div_t['amount']:.0f}MAD)"] = +1
+    else:
+        factors["Pas de dividende proche"] = 0
+
+    # 10. Matrice de transmission (gap implicite vs réel)
+    trans_t = next((s for s in trans_signals if s.get("ticker")==ticker), None)
+    if trans_t:
+        if   trans_t.get("gap", 0) > 1.5:  factors["Matrice: sous-évalué vs macro"]  = +1
+        elif trans_t.get("gap", 0) < -1.5: factors["Matrice: sur-évalué vs macro"]   = -1
+        else:                                factors["Matrice: aligné"] = 0
+    else:
+        factors["Hors matrice"] = 0
+
+    # Score net
+    score = sum(v for v in factors.values() if isinstance(v, int))
+    positives = {k:v for k,v in factors.items() if v == +1}
+    negatives = {k:v for k,v in factors.items() if v == -1}
+    return score, positives, negatives, factors
+
+
+def get_conviction_call(bvc_data, macro, masi_data, gap_signals, flow_signals,
+                         seasonal_al, sector_rot, div_alerts, trans_signals, ammc_pubs):
+    """
+    Identifie le trade du jour avec le maximum de signaux alignés.
+    Retourne le meilleur setup ACHAT et le meilleur setup VENTE/ÉVITER.
+    """
+    candidates = []
+    for ticker, d in bvc_data.items():
+        if not d.get("close"): continue
+        vr = d.get("volume",0) / max(d.get("avg_vol",1),1)
+        if vr < 0.4: continue  # liquidité minimale
+        if abs(d.get("change",0)) > 8: continue  # exclure extrêmes
+
+        score, pos, neg, all_f = _conviction_score(
+            ticker, d, macro, masi_data, gap_signals, flow_signals,
+            seasonal_al, sector_rot, div_alerts, trans_signals
+        )
+        n_pos = len(pos); n_neg = len(neg)
+        candidates.append({
+            "ticker": ticker, "score": score,
+            "n_pos": n_pos, "n_neg": n_neg,
+            "positives": pos, "negatives": neg, "all": all_f,
+            "d": d, "close": d.get("close",0),
+            "rsi": d.get("rsi",50), "change": d.get("change",0),
+            "vr": round(vr,1), "name": BVC.get(ticker,{}).get("n",ticker),
+            "sector": BVC.get(ticker,{}).get("s",""),
+        })
+
+    candidates.sort(key=lambda x: -x["score"])
+    best_buy  = next((c for c in candidates if c["score"] >= 4), None)
+    best_sell = next((c for c in reversed(candidates) if c["score"] <= -4), None)
+
+    # Groq : analyse finale du meilleur trade
+    groq_analysis = ""
+    if best_buy:
+        close = best_buy["close"]
+        rsi   = best_buy["rsi"]
+        t     = best_buy["ticker"]
+        ag_p  = macro.get("silver",{}).get("p",0) if isinstance(macro.get("silver",{}),dict) else 0
+        au_p  = macro.get("gold",{}).get("p",0)   if isinstance(macro.get("gold",{}),dict)   else 0
+        ammc_ctx = next((p["title"][:60] for p in (ammc_pubs or []) if p.get("ticker")==t), "Aucune")
+        prompt = (
+            f"BARAKA CONVICTION CALL — {t} ({best_buy['name']}) | {best_buy['sector']}\n"
+            f"Score: {best_buy['score']}/+10 | {best_buy['n_pos']} signaux ACHAT alignés\n"
+            f"Cours: {close:,.0f} MAD | RSI: {rsi:.0f} | Vol: x{best_buy['vr']}\n"
+            f"Signaux positifs: {list(best_buy['positives'].keys())}\n"
+            f"Signaux négatifs: {list(best_buy['negatives'].keys())}\n"
+            f"Ag: ${ag_p:.2f} | Au: ${au_p:.0f} | AMMC: {ammc_ctx}\n\n"
+            f"Donne EXACTEMENT:\n"
+            f"• [THÈSE] une phrase percutante expliquant pourquoi ce trade EST le meilleur setup du jour\n"
+            f"• [ENTRÉE] niveau exact d'entrée + condition (ex: acheter si retrace à X ou au marché si VIX < 22)\n"
+            f"• [CIBLE] niveau de cible + justification technique (résistance, FV, gap)\n"
+            f"• [STOP] niveau de stop + raison (support cassé, EMA, cap -10%)\n"
+            f"• [RISQUE] le seul scenario qui invalide ce trade\n"
+            f"Chiffres précis. 1 ligne par bullet."
+        )
+        groq_analysis = groq_call(prompt, 350)
+
+    return best_buy, best_sell, groq_analysis
+
+
+def render_conviction_call(best_buy, best_sell, groq_analysis):
+    """Bloc HTML CONVICTION CALL — le joker de Baraka."""
+    if not best_buy and not best_sell: return ""
+
+    def _signal_bar(score, n_pos, n_neg, total=10):
+        filled = min(total, n_pos)
+        bar = "".join(
+            f'<div style="width:28px;height:28px;border-radius:4px;margin:2px;display:inline-block;'
+            f'background:{"#00C87A" if i < filled else "#1A2030"};'
+            f'border:1px solid {"#00C87A" if i < filled else "#2A3040"}"></div>'
+            for i in range(total)
+        )
+        return bar
+
+    def _card(c, direction="ACHAT"):
+        col = "#00C87A" if direction=="ACHAT" else "#FF4560"
+        score_txt = f"{c['score']:+d}/+10" if direction=="ACHAT" else f"{c['score']:+d}/-10"
+        pos_html = "".join(
+            f'<div style="font-size:10px;color:#00C87A;padding:2px 0">✓ {k}</div>'
+            for k in c["positives"]
+        )
+        neg_html = "".join(
+            f'<div style="font-size:10px;color:#FF4560;padding:2px 0">✗ {k}</div>'
+            for k in c["negatives"]
+        )
+        # Niveaux techniques
+        close  = c["close"]
+        tgt    = round(close * 1.07, 2) if direction=="ACHAT" else round(close * 0.93, 2)
+        stop   = round(close * 0.95, 2) if direction=="ACHAT" else round(close * 1.05, 2)
+        rr     = round(abs(tgt-close)/max(abs(close-stop),0.01), 1)
+
+        return (
+            f'<div style="background:linear-gradient(135deg,#0F1520,#13192A);'
+            f'border:2px solid {col};border-radius:12px;padding:16px;margin-bottom:12px">'
+            # Header
+            f'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">'
+            f'<div>'
+            f'<div style="font-size:28px;font-weight:900;color:{col};font-family:monospace">{c["ticker"]}</div>'
+            f'<div style="font-size:11px;color:#6B7280">{c["name"]} — {c["sector"]}</div>'
+            f'</div>'
+            f'<div style="text-align:right">'
+            f'<div style="font-size:22px;font-weight:900;color:#E8E4D6">{c["close"]:,.0f}</div>'
+            f'<div style="color:{"#00C87A" if c["change"]>=0 else "#FF4560"};font-size:11px">{c["change"]:+.1f}% · Vol x{c["vr"]}</div>'
+            f'<div style="background:{col}20;color:{col};border:1px solid {col}50;font-size:10px;padding:2px 10px;border-radius:4px;margin-top:3px">'
+            f'{direction} — {score_txt} signaux</div>'
+            f'</div></div>'
+            # Jauge signaux
+            f'<div style="margin-bottom:10px">'
+            f'<div style="font-size:9px;color:#6B7280;margin-bottom:5px">ALIGNEMENT DES SIGNAUX ({c["n_pos"]}/10 positifs)</div>'
+            + _signal_bar(c["score"], c["n_pos"], c["n_neg"])
+            + f'</div>'
+            # Signaux détail
+            f'<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:10px">'
+            f'<div style="background:#080C14;border-radius:6px;padding:8px">'
+            f'<div style="font-size:8px;color:#00C87A;margin-bottom:4px">FAVORABLES</div>'
+            + pos_html +
+            f'</div>'
+            f'<div style="background:#080C14;border-radius:6px;padding:8px">'
+            f'<div style="font-size:8px;color:#FF4560;margin-bottom:4px">CONTRE / ABSENTS</div>'
+            + neg_html +
+            f'</div></div>'
+            # Niveaux
+            f'<div class="lv" style="border-color:{col}40">'
+            f'<div class="lr"><span style="color:#6B7280">Entrée suggérée</span><strong style="color:#E8E4D6">{close:,.0f} MAD</strong></div>'
+            f'<div class="lr"><span style="color:#6B7280">Cible</span><strong style="color:#00C87A">{tgt:,.0f} MAD (+{round((tgt-close)/close*100,1)}%)</strong></div>'
+            f'<div class="lr"><span style="color:#6B7280">Stop</span><strong style="color:#FF4560">{stop:,.0f} MAD (-{round(abs(close-stop)/close*100,1)}%)</strong></div>'
+            f'<div class="lr"><span style="color:#6B7280">R/R</span><strong style="color:#C9A84C">{rr}</strong></div>'
+            f'</div>'
+            f'</div>'
+        )
+
+    call_html = ""
+    if best_buy:
+        call_html += _card(best_buy, "ACHAT")
+    if best_sell:
+        call_html += _card(best_sell, "ÉVITER/VENTE")
+
+    groq_html = (
+        f'<div style="background:rgba(201,168,76,.06);border:1px solid rgba(201,168,76,.3);'
+        f'border-radius:10px;padding:14px;margin-top:8px">'
+        f'<div style="font-size:9px;color:#C9A84C;letter-spacing:2px;margin-bottom:8px">ANALYSE BARAKA — THÈSE DU TRADE</div>'
+        f'<div style="font-size:11px;color:#E8E4D6;line-height:1.9;white-space:pre-line">{groq_analysis}</div>'
+        f'</div>'
+    ) if groq_analysis else ""
+
+    return (
+        '<div class="sec" style="border-color:rgba(201,168,76,.5);background:linear-gradient(180deg,#080C14,#0A1018)">'
+        '<div class="st" style="color:#C9A84C;font-size:10px;letter-spacing:4px">⚡ CONVICTION CALL DU JOUR — MAXIMUM DE SIGNAUX ALIGNÉS</div>'
+        '<div style="font-size:9px;color:#6B7280;margin-bottom:10px">'
+        '10 facteurs indépendants: RSI · MACD · Volume · Gap · MASI · Élasticité · Secteur · Saisonnalité · Dividende · Matrice<br>'
+        'Quand ≥6/10 s\'alignent sur UN titre → conviction maximale. Jamais une certitude — confirmer avec ton jugement.</div>'
+        + call_html + groq_html
+        + '</div>'
+    )
+
+
 # ─── SURVEILLANCE MARCHES + ALERTES MINES ─────────────────────────────────────
 def monitor_markets():
     """
@@ -3358,7 +3686,7 @@ def run_scheduler():
 |  Lundi 07h00 UTC → Weekly Digest              |
 |  /10 min (9h-15h UTC)   → Triggers positions     |
 +===================================================+
-|  v7.5: +Dividendes/OPCI/Flux/CB-directors |
+|  v7.5: +ConvictionCall/Divs/OPCI/Flux    |
 +===================================================+
     """)
     threading.Thread(target=start_flask, daemon=True).start()
