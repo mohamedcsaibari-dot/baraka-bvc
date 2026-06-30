@@ -870,20 +870,25 @@ def render_cb_calendar_block(cb_results, macro):
 
 # ─── ANALYSE TECHNIQUE MASI ──────────────────────────────────────────────────
 # Big caps BVC et leurs poids estimés dans le MASI (indice pondéré par capi)
+# [Recalibré 30/06/2026] MNG: 7e cap fin 2024 → 1ère cap avril-juin 2026 (+339% en 2025,
+# +98% YTD avant correction -34% depuis ATH 18098 DH du 01/06). Bascule ATW/MNG en cours.
+# Capi totale BVC ~1050 MMDH. ATW=146.75 MMDH | MNG=138.26 MMDH (29/06/2026).
 MASI_WEIGHTS = {
-    "ATW": 0.195, "IAM": 0.148, "BCP": 0.118, "OCP": 0.102,
-    "MNG": 0.055, "CMA": 0.042, "LHM": 0.038, "TQM": 0.037,
-    "ADH": 0.022, "HPS": 0.018, "CSR": 0.016, "CDM": 0.014,
-    "CIH": 0.013, "CMT": 0.012, "SMI": 0.011, "LBV": 0.010,
+    "ATW": 0.140, "MNG": 0.130, "IAM": 0.105, "BCP": 0.085,
+    "OCP": 0.070, "CMA": 0.028, "LHM": 0.026, "TQM": 0.024,
+    "CMT": 0.016, "SMI": 0.014, "ADH": 0.014, "HPS": 0.012,
+    "CSR": 0.012, "CDM": 0.010, "CIH": 0.010, "LBV": 0.009,
 }
 
-# Niveaux S/R MASI calibrés (à mettre à jour mensuellement)
+# Niveaux S/R MASI — recalibrés 30/06/2026 sur clôtures réelles juin 2026
+# Source: bourse de Casablanca / médias spécialisés. Range juin: 18 022 (bas hebdo
+# 22-26/06) à 18 850 (zone ATH année, ~18 783 le 16/06). Clôture 26/06: 18 353,29.
 MASI_LEVELS = {
-    "r3": 14_800, "r2": 14_500, "r1": 14_200,  # résistances
-    "pivot": 13_950,
-    "s1": 13_700, "s2": 13_400, "s3": 13_000,  # supports
-    "ath": 15_300, "atl_2y": 11_800,
-    "ma200": 13_600, "ma50": 13_900,  # estimations MA long terme
+    "r3": 19_300, "r2": 18_850, "r1": 18_550,  # résistances
+    "pivot": 18_300,
+    "s1": 18_000, "s2": 17_700, "s3": 17_300,  # supports
+    "ath": 18_850, "atl_2y": 16_200,
+    "ma200": 18_100, "ma50": 18_400,  # estimations MA
 }
 
 def get_masi_analysis(bvc_data, macro):
