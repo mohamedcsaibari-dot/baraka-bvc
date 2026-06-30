@@ -363,34 +363,36 @@ def scorecard_stats(sc=None):
 
 # ─── CSS ──────────────────────────────────────────────────────────────────────
 CSS = """<style>
+:root{color-scheme:dark only;supported-color-schemes:dark only}
+html{color-scheme:dark only}
 *{box-sizing:border-box;margin:0;padding:0}
-body{background:#080C14;color:#E8E4D6;font-family:'Courier New',monospace}
-.w{max-width:660px;margin:0 auto;padding:14px}
+body{background:#080C14 !important;color:#E8E4D6 !important;font-family:'Courier New',monospace}
+.w{max-width:660px;margin:0 auto;padding:14px;background:#080C14 !important}
 .hdr{background:linear-gradient(135deg,#0F1520,#1A2030);border:1px solid rgba(201,168,76,.5);border-radius:12px;padding:18px;text-align:center;margin-bottom:12px}
-.logo{font-size:26px;font-weight:900;color:#C9A84C;letter-spacing:8px}
-.sub{font-size:10px;color:#6B7280;letter-spacing:3px;margin-top:3px}
+.logo{font-size:26px;font-weight:900;color:#D4B25A !important;letter-spacing:8px}
+.sub{font-size:10px;color:#9CA3AF !important;letter-spacing:3px;margin-top:3px}
 .bdg{display:inline-block;border:1px solid;padding:4px 14px;border-radius:20px;font-size:11px;margin-top:7px}
 .sec{background:#0F1520;border:1px solid rgba(201,168,76,.15);border-radius:10px;padding:13px;margin-bottom:10px}
-.st{font-size:9px;color:#C9A84C;letter-spacing:3px;text-transform:uppercase;margin-bottom:9px;border-bottom:1px solid rgba(201,168,76,.15);padding-bottom:5px}
+.st{font-size:9px;color:#D4B25A !important;letter-spacing:3px;text-transform:uppercase;margin-bottom:9px;border-bottom:1px solid rgba(201,168,76,.15);padding-bottom:5px}
 .mg{display:flex;gap:6px;flex-wrap:wrap}
 .mb{flex:1;min-width:70px;background:#13192A;border-radius:7px;padding:8px;text-align:center}
-.ml{font-size:8px;color:#6B7280;margin-bottom:2px}
+.ml{font-size:8px;color:#9CA3AF !important;margin-bottom:2px}
 .mv{font-size:13px;font-weight:900}
-.g{color:#00C87A}.r{color:#FF4560}.go{color:#C9A84C}.b{color:#60A5FA}.pu{color:#8B5CF6}.or{color:#F59E0B}
-.ni{padding:5px 0;border-bottom:1px solid rgba(255,255,255,.04);font-size:11px;color:#9CA3AF;line-height:1.6}
+.g{color:#34D399 !important}.r{color:#FF6B81 !important}.go{color:#D4B25A !important}.b{color:#7DB8FF !important}.pu{color:#A78BFA !important}.or{color:#FBBF24 !important}
+.ni{padding:5px 0;border-bottom:1px solid rgba(255,255,255,.04);font-size:11px;color:#B0B8C8 !important;line-height:1.6}
 .src{font-size:8px;font-weight:700;padding:1px 5px;border-radius:3px;margin-right:5px}
 .card{background:#13192A;border-radius:10px;padding:13px;margin-bottom:10px}
 .geo{background:rgba(239,68,68,.06);border:1px solid rgba(239,68,68,.2);border-radius:10px;padding:13px;margin-bottom:10px}
-.geot{font-size:9px;color:#EF4444;letter-spacing:3px;text-transform:uppercase;margin-bottom:7px}
-.imp{background:rgba(239,68,68,.12);border-left:3px solid #EF4444;border-radius:4px;padding:8px;margin-bottom:5px}
+.geot{font-size:9px;color:#F87171 !important;letter-spacing:3px;text-transform:uppercase;margin-bottom:7px}
+.imp{background:rgba(239,68,68,.12);border-left:3px solid #F87171;border-radius:4px;padding:8px;margin-bottom:5px}
 .lv{background:rgba(0,200,122,.06);border:1px solid rgba(0,200,122,.2);border-radius:8px;padding:11px;margin:7px 0}
 .lr{display:flex;justify-content:space-between;padding:3px 0;font-size:12px}
 .sy{background:rgba(139,92,246,.06);border:1px solid rgba(139,92,246,.25);border-radius:10px;padding:13px;margin-bottom:10px}
-.syt{font-size:9px;color:#8B5CF6;letter-spacing:3px;text-transform:uppercase;margin-bottom:7px}
-.sytx{font-size:12px;line-height:1.8}
+.syt{font-size:9px;color:#A78BFA !important;letter-spacing:3px;text-transform:uppercase;margin-bottom:7px}
+.sytx{font-size:12px;line-height:1.8;color:#E8E4D6 !important}
 .sb{background:#080C14;border-radius:3px;height:4px;margin-top:3px}
-.sf{height:100%;border-radius:3px;background:linear-gradient(90deg,#C9A84C,#F59E0B)}
-.ft{text-align:center;font-size:10px;color:#4B5563;margin-top:12px;line-height:2}
+.sf{height:100%;border-radius:3px;background:linear-gradient(90deg,#D4B25A,#FBBF24)}
+.ft{text-align:center;font-size:10px;color:#8A93A3 !important;margin-top:12px;line-height:2}
 .exc{background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.25);border-radius:8px;padding:10px;margin-bottom:7px}
 .vip{background:rgba(245,158,11,.05);border:1px solid rgba(245,158,11,.2);border-radius:8px;padding:10px;margin-bottom:7px}
 </style>"""
@@ -398,11 +400,11 @@ body{background:#080C14;color:#E8E4D6;font-family:'Courier New',monospace}
 def cv(v): return "g" if v>=0 else "r"
 def pv(v): return f"+{v:.2f}%" if v>=0 else f"{v:.2f}%"
 def sg(v): return "+" if v>=0 else ""
-def cv_hex(v): return "#00C87A" if v>=0 else "#FF4560"
+def cv_hex(v): return "#34D399" if v>=0 else "#FF6B81"
 
 def ammc_badge(ptype):
-    badges = {"warning":("#FF4560","🚨 WARNING"),"resultats":("#60A5FA","📊 RESULTATS"),"dividende":("#00C87A","💰 DIVIDENDE"),"operation":("#F59E0B","🏦 OPERATION")}
-    return badges.get(ptype, ("#EF4444",""))
+    badges = {"warning":("#FF6B81","🚨 WARNING"),"resultats":("#7DB8FF","📊 RESULTATS"),"dividende":("#34D399","💰 DIVIDENDE"),"operation":("#FBBF24","🏦 OPERATION")}
+    return badges.get(ptype, ("#F87171",""))
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # RENDER FUNCTIONS
@@ -426,16 +428,16 @@ def render_mining_block(mining_data, macro):
     for fv in mining_data:
         t = fv["ticker"]; info = BVC.get(t,{})
         gap = fv["gap"]; sig = fv["signal"]
-        sig_col = "#00C87A" if sig=="ACHAT" else ("#FF4560" if sig=="PRUDENCE" else "#C9A84C")
-        gap_col = "#00C87A" if gap>0 else "#FF4560"
+        sig_col = "#34D399" if sig=="ACHAT" else ("#FF6B81" if sig=="PRUDENCE" else "#D4B25A")
+        gap_col = "#34D399" if gap>0 else "#FF6B81"
         contrib_html = ""
         for k, v in sorted(fv["contributions"].items(), key=lambda x:-abs(x[1])):
-            cc = "#00C87A" if v>=0 else "#FF4560"
+            cc = "#34D399" if v>=0 else "#FF6B81"
             contrib_html += f'<span style="display:inline-block;margin-right:10px;font-size:10px"><span style="color:#6B7280">{k}</span> <span style="color:{cc};font-weight:700">{v:+.2f}%</span></span>'
         lag_html = ""
         if fv["lag_signal"]:
-            lag_html = (f'<div style="background:rgba(245,158,11,.1);border-left:3px solid #F59E0B;border-radius:4px;padding:8px;margin-top:6px">'
-                       f'<span style="color:#F59E0B;font-size:11px;font-weight:700">⚡ LEAD/LAG: </span>'
+            lag_html = (f'<div style="background:rgba(245,158,11,.1);border-left:3px solid #FBBF24;border-radius:4px;padding:8px;margin-top:6px">'
+                       f'<span style="color:#FBBF24;font-size:11px;font-weight:700">⚡ LEAD/LAG: </span>'
                        f'<span style="color:#E8E4D6;font-size:11px">{fv["lag_signal"]}</span></div>')
         cards += (
             f'<div class="card" style="border-left:4px solid {sig_col}">'
@@ -453,10 +455,10 @@ def render_mining_block(mining_data, macro):
         )
     return (
         '<div class="sec" style="border-color:rgba(139,92,246,.3)">'
-        '<div class="st" style="color:#8B5CF6">MOTEUR CORRELATIONS MINIERES — FAIR VALUE vs MARCHE</div>'
+        '<div class="st" style="color:#A78BFA">MOTEUR CORRELATIONS MINIERES — FAIR VALUE vs MARCHE</div>'
         '<div style="font-size:9px;color:#6B7280;margin-bottom:8px">Mouvement implicite = betas appliques aux metaux temps reel. Gap = ecart exploitable.</div>'
         + drivers_html + cards +
-        '<div style="font-size:9px;color:#4B5563;margin-top:6px">Betas calibrables via backtest. Argent mene SMI ~20min, Or mene Managem ~30min.</div>'
+        '<div style="font-size:9px;color:#8A93A3;margin-top:6px">Betas calibrables via backtest. Argent mene SMI ~20min, Or mene Managem ~30min.</div>'
         '</div>'
     )
 
@@ -464,17 +466,17 @@ def render_fundamentals_block(fundamentals):
     f = fundamentals
     if not f: return ""
     rows = ""
-    if f.get("ipc") is not None: rows += f'<div class="ni"><span class="src b">HCP</span>Inflation IPC: <strong style="color:#C9A84C">{f["ipc"]}%</strong></div>'
-    if f.get("bam_rate") is not None: rows += f'<div class="ni"><span class="src" style="background:rgba(96,165,250,.12);color:#60A5FA">BAM</span>Taux directeur: <strong style="color:#C9A84C">{f["bam_rate"]}%</strong></div>'
-    if f.get("bam_proj") is not None: rows += f'<div class="ni"><span class="src" style="background:rgba(96,165,250,.12);color:#60A5FA">BAM</span>Projection inflation: <strong style="color:#C9A84C">{f["bam_proj"]}%</strong></div>'
+    if f.get("ipc") is not None: rows += f'<div class="ni"><span class="src b">HCP</span>Inflation IPC: <strong style="color:#D4B25A">{f["ipc"]}%</strong></div>'
+    if f.get("bam_rate") is not None: rows += f'<div class="ni"><span class="src" style="background:rgba(96,165,250,.12);color:#7DB8FF">BAM</span>Taux directeur: <strong style="color:#D4B25A">{f["bam_rate"]}%</strong></div>'
+    if f.get("bam_proj") is not None: rows += f'<div class="ni"><span class="src" style="background:rgba(96,165,250,.12);color:#7DB8FF">BAM</span>Projection inflation: <strong style="color:#D4B25A">{f["bam_proj"]}%</strong></div>'
     for sect, val in f.get("ppi",{}).items():
-        col = "#FF4560" if val>2 else ("#00C87A" if val<-1 else "#9CA3AF")
-        rows += f'<div class="ni"><span class="src" style="background:rgba(139,92,246,.12);color:#8B5CF6">PPI</span>{sect}: <strong style="color:{col}">{val:+.1f}%</strong></div>'
+        col = "#FF6B81" if val>2 else ("#34D399" if val<-1 else "#9CA3AF")
+        rows += f'<div class="ni"><span class="src" style="background:rgba(139,92,246,.12);color:#A78BFA">PPI</span>{sect}: <strong style="color:{col}">{val:+.1f}%</strong></div>'
     allnews = dedup_news((f.get("ipc_news",[]) + f.get("bam_news",[]) + f.get("ppi_news",[]))[:4])
     for n in allnews[:3]: rows += f'<div class="ni"><span class="src go">FOND</span>{n}</div>'
-    if not rows: rows = '<div class="ni" style="color:#4B5563">Donnees fondamentales en cours de collecte</div>'
+    if not rows: rows = '<div class="ni" style="color:#8A93A3">Donnees fondamentales en cours de collecte</div>'
     return ('<div class="sec" style="border-color:rgba(139,92,246,.25)">'
-            '<div class="st" style="color:#8B5CF6">FONDAMENTAUX MAROC — HCP / PPI / BAM</div>'
+            '<div class="st" style="color:#A78BFA">FONDAMENTAUX MAROC — HCP / PPI / BAM</div>'
             '<div style="font-size:9px;color:#6B7280;margin-bottom:8px">Donnees periodiques — ajustent le biais sectoriel de la matrice.</div>'
             + rows + '</div>')
 
@@ -482,29 +484,29 @@ def render_scorecard_block(stats):
     if not stats or stats["total"]==0:
         return ('<div class="sec"><div class="st">SCORECARD — SUIVI PERFORMANCE</div>'
                 f'<div style="font-size:11px;color:#6B7280">Collecte en cours. ({stats.get("open",0) if stats else 0} positions suivies).</div></div>')
-    hr = stats["hit_rate"]; hr_col = "#00C87A" if hr>=55 else ("#C9A84C" if hr>=45 else "#FF4560")
-    pnl_col = "#00C87A" if stats["avg_pnl"]>=0 else "#FF4560"
+    hr = stats["hit_rate"]; hr_col = "#34D399" if hr>=55 else ("#D4B25A" if hr>=45 else "#FF6B81")
+    pnl_col = "#34D399" if stats["avg_pnl"]>=0 else "#FF6B81"
     tf_rows = ""
     for tf, lbl in [("day","Intraday"),("week","Semaine"),("quarter","3 Mois")]:
         if tf in stats["by_tf"]:
-            d = stats["by_tf"][tf]; c = "#00C87A" if d["hit"]>=55 else ("#C9A84C" if d["hit"]>=45 else "#FF4560")
-            tf_rows += f'<div class="ni"><span style="color:#6B7280;min-width:80px;display:inline-block">{lbl}</span> <strong style="color:{c}">{d["hit"]}%</strong> <span style="color:#4B5563">({d["n"]} trades)</span></div>'
+            d = stats["by_tf"][tf]; c = "#34D399" if d["hit"]>=55 else ("#D4B25A" if d["hit"]>=45 else "#FF6B81")
+            tf_rows += f'<div class="ni"><span style="color:#6B7280;min-width:80px;display:inline-block">{lbl}</span> <strong style="color:{c}">{d["hit"]}%</strong> <span style="color:#8A93A3">({d["n"]} trades)</span></div>'
     return ('<div class="sec" style="border-color:rgba(0,200,122,.25)">'
-            '<div class="st" style="color:#00C87A">SCORECARD — EDGE PROUVE (suivi forward reel)</div>'
+            '<div class="st" style="color:#34D399">SCORECARD — EDGE PROUVE (suivi forward reel)</div>'
             '<div class="mg" style="margin-bottom:8px">'
             f'<div class="mb"><div class="ml">HIT-RATE</div><div class="mv" style="color:{hr_col}">{hr}%</div></div>'
             f'<div class="mb"><div class="ml">P&L MOYEN</div><div class="mv" style="color:{pnl_col}">{stats["avg_pnl"]:+.1f}%</div></div>'
             f'<div class="mb"><div class="ml">CLOTUREES</div><div class="mv go">{stats["total"]}</div></div>'
             f'<div class="mb"><div class="ml">SUIVIES</div><div class="mv b">{stats["open"]}</div></div>'
             '</div>' + tf_rows +
-            '<div style="font-size:9px;color:#4B5563;margin-top:6px">Suivi forward reel. L\'edge se construit seance apres seance.</div></div>')
+            '<div style="font-size:9px;color:#8A93A3;margin-top:6px">Suivi forward reel. L\'edge se construit seance apres seance.</div></div>')
 
 def render_geo_event(ev):
     if not ev: return ""
-    win = " ".join(f'<span style="color:#00C87A;font-weight:700">{w}</span>' for w in ev.get("winners",[]))
-    los = " ".join(f'<span style="color:#FF4560;font-weight:700">{l}</span>' for l in ev.get("losers",[]))
+    win = " ".join(f'<span style="color:#34D399;font-weight:700">{w}</span>' for w in ev.get("winners",[]))
+    los = " ".join(f'<span style="color:#FF6B81;font-weight:700">{l}</span>' for l in ev.get("losers",[]))
     return ('<div class="geo" style="border-color:rgba(245,158,11,.4)">'
-            '<div class="geot" style="color:#F59E0B">EVENEMENT STRUCTURANT DETECTE — CHAINE D\'IMPACT</div>'
+            '<div class="geot" style="color:#FBBF24">EVENEMENT STRUCTURANT DETECTE — CHAINE D\'IMPACT</div>'
             f'<div style="font-size:12px;color:#E8E4D6;line-height:1.7;margin-bottom:8px">{ev["chain"]}</div>'
             + (f'<div style="font-size:11px"><span style="color:#6B7280">Beneficiaires: </span>{win}</div>' if win else "")
             + (f'<div style="font-size:11px;margin-top:3px"><span style="color:#6B7280">Sous pression: </span>{los}</div>' if los else "")
@@ -515,8 +517,8 @@ def render_transmission_block(signals, macro, geo_event=None):
     if not signals and not geo_html: return ""
     rows = ""
     for s in signals[:10]:
-        sig_col = "#00C87A" if s["signal"]=="ACHAT" else ("#FF4560" if s["signal"]=="PRUDENCE" else "#C9A84C")
-        gap_col = "#00C87A" if s["gap"]>0 else "#FF4560"; dom = s.get("dominant",("",0))
+        sig_col = "#34D399" if s["signal"]=="ACHAT" else ("#FF6B81" if s["signal"]=="PRUDENCE" else "#D4B25A")
+        gap_col = "#34D399" if s["gap"]>0 else "#FF6B81"; dom = s.get("dominant",("",0))
         rows += (f'<div style="display:flex;align-items:center;padding:7px 0;border-bottom:1px solid rgba(255,255,255,.04);font-size:11px">'
                  f'<span style="color:{sig_col};font-weight:700;font-family:monospace;min-width:64px">{s["ticker"]}</span>'
                  f'<span style="color:#6B7280;min-width:96px;font-size:10px">{s["sector"]}</span>'
@@ -524,9 +526,9 @@ def render_transmission_block(signals, macro, geo_event=None):
                  f'<span style="color:{gap_col};font-weight:700;min-width:60px;text-align:right">gap {s["gap"]:+.1f}%</span>'
                  f'<span style="color:#6B7280;min-width:78px;text-align:right;font-size:9px">{dom[0]} {dom[1]:+.1f}%</span></div>')
     matrix = ('<div class="sec" style="border-color:rgba(96,165,250,.3)">'
-              '<div class="st" style="color:#60A5FA">MATRICE DE TRANSMISSION MACRO -> SECTEUR -> ACTION</div>'
+              '<div class="st" style="color:#7DB8FF">MATRICE DE TRANSMISSION MACRO -> SECTEUR -> ACTION</div>'
               '<div style="font-size:9px;color:#6B7280;margin-bottom:8px">Gap = ecart exploitable.</div>'
-              + (rows if rows else '<div style="color:#4B5563;font-size:11px">BVC alignee avec sa macro aujourd\'hui</div>')
+              + (rows if rows else '<div style="color:#8A93A3;font-size:11px">BVC alignee avec sa macro aujourd\'hui</div>')
               + '</div>')
     return geo_html + matrix
 
@@ -564,10 +566,10 @@ def render_elasticity_block(bvc_data, macro):
     au_mng  = 3.43 * au * 0.01
     ag_cmt  = cmt_bet * ag * 0.01
 
-    def stock_card(name, bvc, fv, el, lim_o, plus1, drv_sym, drv_price, color="#C9A84C", note=""):
+    def stock_card(name, bvc, fv, el, lim_o, plus1, drv_sym, drv_price, color="#D4B25A", note=""):
         if bvc > 0:
             sig, gap = valuation_signal(bvc, fv)
-            gc  = "#00C87A" if gap > 0 else "#FF4560"
+            gc  = "#34D399" if gap > 0 else "#FF6B81"
             top = (
                 f'<div style="display:flex;gap:6px;margin-bottom:6px">'
                 f'<div style="flex:1;background:#0F1520;border-radius:6px;padding:8px;text-align:center">'
@@ -598,7 +600,7 @@ def render_elasticity_block(bvc_data, macro):
             + (f'<div class="mb"><div class="ml">Lim▲</div><div class="mv b">{lh:,}</div></div>' if lh else '')
             + (f'<div class="mb"><div class="ml">Lim▼</div><div class="mv r">{lb:,}</div></div>' if lb else '')
             + '</div>'
-            + (f'<div style="font-size:9px;color:#4B5563;margin-top:4px">{note}</div>' if note else '')
+            + (f'<div style="font-size:9px;color:#8A93A3;margin-top:4px">{note}</div>' if note else '')
         )
 
     cu_note = (f" | Cu${cu:,.0f}/T {(cu-9200)/9200*100:+.1f}%vs ref" if cu > 0 else " | Cu n.d.")
@@ -613,7 +615,7 @@ def render_elasticity_block(bvc_data, macro):
 
     return (
         '<div class="sec" style="border-color:rgba(201,168,76,.3)">'
-        '<div class="st" style="color:#C9A84C">ELASTICITE PRIX — VALORISATION SMI / MANAGEM / CMT</div>'
+        '<div class="st" style="color:#D4B25A">ELASTICITE PRIX — VALORISATION SMI / MANAGEM / CMT</div>'
         f'<div style="font-size:9px;color:#6B7280;margin-bottom:10px">'
         f'Ag${ag:.2f} · β_smi={smi_bet:.0f} · el={smi_el:.2f}x &nbsp;|&nbsp; '
         f'Au${au:,.0f} · β_mng=3.43 · el={mng_el:.2f}x &nbsp;|&nbsp; '
@@ -621,7 +623,7 @@ def render_elasticity_block(bvc_data, macro):
         '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">'
         + smi_card + mng_card + cmt_card
         + '</div>'
-        + '<div style="font-size:9px;color:#4B5563;margin-top:8px">'
+        + '<div style="font-size:9px;color:#8A93A3;margin-top:8px">'
         + 'MNG: base or beta calibre + ajust. Cu 25% CA | CMT: Ag 65%+Zn+Pb 35% CA (mine Tighza polymetal.)'
         + '</div></div>'
     )
@@ -639,13 +641,13 @@ def render_mines_alert_email(mine_alerts):
     th    = THRESHOLD_PCT
     cards = ""
     for a in mine_alerts:
-        sig_col = "#00C87A" if a["move_pct"] > 0 else "#FF4560"
+        sig_col = "#34D399" if a["move_pct"] > 0 else "#FF6B81"
         arr     = "▲" if a["move_pct"] > 0 else "▼"
         el      = a["elasticity"]
         fv      = a["fv_mad"]
 
         if a["bvc_mad"] and a["gap_pct"] is not None:
-            gc      = "#00C87A" if a["gap_pct"] > 0 else "#FF4560"
+            gc      = "#34D399" if a["gap_pct"] > 0 else "#FF6B81"
             gap_lbl = ("← retard BVC" if a["gap_pct"] > 3 else
                        "← BVC en avance" if a["gap_pct"] < -3 else "← aligné")
             gap_row = (
@@ -655,7 +657,7 @@ def render_mines_alert_email(mine_alerts):
                 f'<div style="font-size:15px;font-weight:900;color:#E8E4D6">{a["bvc_mad"]:,}</div></div>'
                 f'<div style="flex:1;background:#0F1520;border-radius:6px;padding:8px;text-align:center">'
                 f'<div style="font-size:8px;color:#6B7280">THÉORIQUE</div>'
-                f'<div style="font-size:15px;font-weight:900;color:#C9A84C">{fv:,}</div></div>'
+                f'<div style="font-size:15px;font-weight:900;color:#D4B25A">{fv:,}</div></div>'
                 f'<div style="flex:1;background:{gc}12;border:1px solid {gc}40;border-radius:6px;padding:8px;text-align:center">'
                 f'<div style="font-size:8px;color:#6B7280">GAP</div>'
                 f'<div style="font-size:14px;font-weight:900;color:{gc}">{a["gap_pct"]:+.1f}%</div></div></div>'
@@ -665,7 +667,7 @@ def render_mines_alert_email(mine_alerts):
             gap_row = (
                 f'<div style="background:#0F1520;border-radius:6px;padding:10px;text-align:center;margin-bottom:8px">'
                 f'<div style="font-size:8px;color:#6B7280">THÉORIQUE</div>'
-                f'<div style="font-size:18px;font-weight:900;color:#C9A84C">{fv:,} MAD</div></div>'
+                f'<div style="font-size:18px;font-weight:900;color:#D4B25A">{fv:,} MAD</div></div>'
             )
 
         cards += (
@@ -688,7 +690,7 @@ def render_mines_alert_email(mine_alerts):
         )
 
     html = (
-        f'<!DOCTYPE html><html><head><meta charset="UTF-8">{CSS}</head>'
+        f'<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="color-scheme" content="dark"><meta name="supported-color-schemes" content="dark">{CSS}</head>'
         f'<body><div class="w">'
         f'<div class="hdr" style="border-color:rgba(245,158,11,.5)">'
         f'<div class="logo">BARAKA</div>'
@@ -833,8 +835,8 @@ def render_cb_calendar_block(cb_results, macro):
     groq_pred = _cb_groq_prediction(cb_results, macro)
     rows = ""
     for r in cb_results:
-        bias_col = "#FF4560" if r["bias"]=="HAWKISH" else ("#00C87A" if r["bias"]=="DOVISH" else "#C9A84C")
-        urg_col  = "#FF4560" if r["urgent"] else ("#F59E0B" if r["soon"] else "#6B7280")
+        bias_col = "#FF6B81" if r["bias"]=="HAWKISH" else ("#34D399" if r["bias"]=="DOVISH" else "#D4B25A")
+        urg_col  = "#FF6B81" if r["urgent"] else ("#FBBF24" if r["soon"] else "#6B7280")
         imp = r["bvc_impact"]
         rows += (
             f'<div class="card" style="border-left:4px solid {bias_col};margin-bottom:8px">'
@@ -860,7 +862,7 @@ def render_cb_calendar_block(cb_results, macro):
     ) if groq_pred else ""
     return (
         '<div class="sec" style="border-color:rgba(96,165,250,.3)">'
-        '<div class="st" style="color:#60A5FA">CALENDRIER BANQUES CENTRALES — BAM / FED / BCE</div>'
+        '<div class="st" style="color:#7DB8FF">CALENDRIER BANQUES CENTRALES — BAM / FED / BCE</div>'
         '<div style="font-size:9px;color:#6B7280;margin-bottom:8px">'
         'Réunions à venir · Impact sur MASI/mines/banques · Anticipation pré-marché</div>'
         + rows + pred_html
@@ -974,7 +976,7 @@ def render_masi_block(masi_data, macro, geo=None):
     """Bloc HTML analyse MASI + big caps + S/R."""
     if not masi_data: return ""
     sig = masi_data["signal"]
-    sig_col = "#00C87A" if "HAUSSIER" in sig else ("#FF4560" if "BAISSIER" in sig else "#C9A84C")
+    sig_col = "#34D399" if "HAUSSIER" in sig else ("#FF6B81" if "BAISSIER" in sig else "#D4B25A")
     lvl = masi_data["levels"]
 
     # Jauge S/R visuelle
@@ -987,9 +989,9 @@ def render_masi_block(masi_data, macro, geo=None):
             f'<div style="display:flex;justify-content:space-between;font-size:9px;color:#6B7280;margin-bottom:3px">'
             f'<span>S1 {s1:,}</span><span>PIVOT {pivot:,}</span><span>R1 {r1:,}</span></div>'
             f'<div style="background:#1A2030;border-radius:4px;height:8px;position:relative">'
-            f'<div style="position:absolute;left:50%;top:-1px;width:1px;height:10px;background:#C9A84C40"></div>'
+            f'<div style="position:absolute;left:50%;top:-1px;width:1px;height:10px;background:#D4B25A40"></div>'
             f'<div style="width:{pos*100:.0f}%;height:100%;border-radius:4px;'
-            f'background:linear-gradient(90deg,#FF4560,#C9A84C,#00C87A)"></div>'
+            f'background:linear-gradient(90deg,#FF6B81,#D4B25A,#34D399)"></div>'
             f'<div style="position:absolute;left:{pos*100:.0f}%;top:-3px;transform:translateX(-50%);'
             f'width:8px;height:14px;background:{sig_col};border-radius:2px"></div>'
             f'</div>'
@@ -1002,7 +1004,7 @@ def render_masi_block(masi_data, macro, geo=None):
     # Contributions big caps
     contrib_html = ""
     for c in masi_data["contributions"][:6]:
-        col = "#00C87A" if c["change"] >= 0 else "#FF4560"
+        col = "#34D399" if c["change"] >= 0 else "#FF6B81"
         bar_w = min(100, int(abs(c["contribution"]) / 0.3 * 100))
         contrib_html += (
             f'<div style="display:flex;align-items:center;padding:3px 0;font-size:10px">'
@@ -1011,7 +1013,7 @@ def render_masi_block(masi_data, macro, geo=None):
             f'<div style="flex:1;background:#0F1520;border-radius:2px;height:6px;margin:0 6px">'
             f'<div style="width:{bar_w}%;height:100%;background:{col};border-radius:2px"></div></div>'
             f'<span style="color:{col};min-width:50px;text-align:right">{c["change"]:+.2f}%</span>'
-            f'<span style="color:#4B5563;min-width:48px;text-align:right;font-size:9px">{c["contribution"]:+.3f}</span>'
+            f'<span style="color:#8A93A3;min-width:48px;text-align:right;font-size:9px">{c["contribution"]:+.3f}</span>'
             f'</div>'
         )
 
@@ -1023,7 +1025,7 @@ def render_masi_block(masi_data, macro, geo=None):
 
     return (
         '<div class="sec" style="border-color:rgba(0,200,122,.25)">'
-        f'<div class="st" style="color:#00C87A">MASI — SUPPORTS / RÉSISTANCES & BIG CAPS</div>'
+        f'<div class="st" style="color:#34D399">MASI — SUPPORTS / RÉSISTANCES & BIG CAPS</div>'
         f'<div class="mg" style="margin-bottom:10px">'
         f'<div class="mb"><div class="ml">SIGNAL</div><div class="mv" style="color:{sig_col}">{sig}</div></div>'
         f'<div class="mb"><div class="ml">Contribution pondérée</div><div class="mv" style="color:{sig_col}">{masi_data["weighted_chg"]:+.2f}%</div></div>'
@@ -1032,8 +1034,8 @@ def render_masi_block(masi_data, macro, geo=None):
         + sr_bar +
         f'<div style="font-size:8px;color:#6B7280;margin-bottom:4px">CONTRIBUTION BIG CAPS (poids MASI × variation)</div>'
         + contrib_html
-        + (f'<div style="font-size:10px;color:#F59E0B;margin-top:6px;padding:6px;background:rgba(245,158,11,.08);border-radius:4px">{masi_data["sr_note"]}</div>' if masi_data["sr_note"] else "")
-        + f'<div style="font-size:9px;color:#4B5563;margin-top:6px">S2={lvl["s2"]:,} · S1={lvl["s1"]:,} · PIVOT={lvl["pivot"]:,} · R1={lvl["r1"]:,} · R2={lvl["r2"]:,} | MA200≈{lvl["ma200"]:,}</div>'
+        + (f'<div style="font-size:10px;color:#FBBF24;margin-top:6px;padding:6px;background:rgba(245,158,11,.08);border-radius:4px">{masi_data["sr_note"]}</div>' if masi_data["sr_note"] else "")
+        + f'<div style="font-size:9px;color:#8A93A3;margin-top:6px">S2={lvl["s2"]:,} · S1={lvl["s1"]:,} · PIVOT={lvl["pivot"]:,} · R1={lvl["r1"]:,} · R2={lvl["r2"]:,} | MA200≈{lvl["ma200"]:,}</div>'
         + groq_html
         + '</div>'
     )
@@ -1109,10 +1111,10 @@ def render_gaps_block(gaps):
     other_gaps = [g for g in gaps if not g["fillable"]]
 
     def _gap_row(g):
-        col_g  = "#00C87A" if g["gap_pct"] < 0 else "#FF4560"
-        col_t  = "#FF4560" if g["fill_dir"] == "BAISSE" else "#00C87A"
+        col_g  = "#34D399" if g["gap_pct"] < 0 else "#FF6B81"
+        col_t  = "#FF6B81" if g["fill_dir"] == "BAISSE" else "#34D399"
         arrow  = "↑" if g["fill_dir"] == "HAUSSE" else "↓"
-        prob_c = "#00C87A" if g["prob"] >= 70 else ("#C9A84C" if g["prob"] >= 55 else "#6B7280")
+        prob_c = "#34D399" if g["prob"] >= 70 else ("#D4B25A" if g["prob"] >= 55 else "#6B7280")
         return (
             f'<div style="padding:7px 0;border-bottom:1px solid rgba(255,255,255,.04);font-size:11px">'
             f'<div style="display:flex;justify-content:space-between;align-items:center">'
@@ -1129,7 +1131,7 @@ def render_gaps_block(gaps):
             f'<span style="color:#6B7280">Open: <strong style="color:#E8E4D6">{g["open"]:,.0f}</strong></span>'
             f'<span style="color:#6B7280">BVC: <strong style="color:#E8E4D6">{g["close"]:,.0f}</strong></span>'
             f'<span style="color:{col_t};font-weight:700">{arrow} Cible {g["target"]:,.0f} ({g["target_pct"]:+.1f}%)</span>'
-            f'<span style="color:#4B5563">RSI {g["rsi"]:.0f} · Vol x{g["vol_x"]}</span>'
+            f'<span style="color:#8A93A3">RSI {g["rsi"]:.0f} · Vol x{g["vol_x"]}</span>'
             f'</div></div>'
         )
 
@@ -1137,18 +1139,18 @@ def render_gaps_block(gaps):
     other_html = ""
     if other_gaps:
         other_html = (
-            '<div style="font-size:9px;color:#4B5563;margin-top:8px;padding-top:8px;border-top:1px solid rgba(255,255,255,.05)">Gaps probables multi-séances:</div>'
+            '<div style="font-size:9px;color:#8A93A3;margin-top:8px;padding-top:8px;border-top:1px solid rgba(255,255,255,.05)">Gaps probables multi-séances:</div>'
             + "".join(_gap_row(g) for g in other_gaps[:4])
         )
 
     return (
         '<div class="sec" style="border-color:rgba(245,158,11,.3)">'
-        '<div class="st" style="color:#F59E0B">GAPS TECHNIQUES — PROBABILITÉ DE COMBLEMENT</div>'
+        '<div class="st" style="color:#FBBF24">GAPS TECHNIQUES — PROBABILITÉ DE COMBLEMENT</div>'
         f'<div style="font-size:9px;color:#6B7280;margin-bottom:8px">'
         f'{len(today_gaps)} comblables aujourd\'hui · Prob. = taille gap + RSI extrême + volume · Direction = inverse du gap</div>'
-        + (today_html if today_html else '<div style="color:#4B5563;font-size:11px">Aucun gap significatif détecté ce matin</div>')
+        + (today_html if today_html else '<div style="color:#8A93A3;font-size:11px">Aucun gap significatif détecté ce matin</div>')
         + other_html
-        + '<div style="font-size:9px;color:#4B5563;margin-top:6px">Règle: gap up → comblement probable à la baisse. Gap down → rebond technique. Confirmer avec volume.</div>'
+        + '<div style="font-size:9px;color:#8A93A3;margin-top:6px">Règle: gap up → comblement probable à la baisse. Gap down → rebond technique. Confirmer avec volume.</div>'
         '</div>'
     )
 
@@ -1215,8 +1217,8 @@ def render_blocks_block(blocks):
     rows = ""
     for b in blocks:
         total_m = b["total_mad"]
-        size_col = "#FF4560" if total_m > 10e6 else ("#F59E0B" if total_m > 3e6 else "#C9A84C")
-        gap_col  = "#00C87A" if b["gap_vs_marche"] > 0 else "#FF4560"
+        size_col = "#FF6B81" if total_m > 10e6 else ("#FBBF24" if total_m > 3e6 else "#D4B25A")
+        gap_col  = "#34D399" if b["gap_vs_marche"] > 0 else "#FF6B81"
         rows += (
             f'<div style="padding:8px 0;border-bottom:1px solid rgba(255,255,255,.04)">'
             f'<div style="display:flex;justify-content:space-between;font-size:11px">'
@@ -1236,11 +1238,11 @@ def render_blocks_block(blocks):
         )
     return (
         '<div class="sec" style="border-color:rgba(239,68,68,.25)">'
-        '<div class="st" style="color:#EF4444">MARCHÉ DE BLOCS BVC — SMART MONEY (~15 min retard)</div>'
+        '<div class="st" style="color:#F87171">MARCHÉ DE BLOCS BVC — SMART MONEY (~15 min retard)</div>'
         f'<div style="font-size:9px;color:#6B7280;margin-bottom:8px">'
         f'{len(blocks)} transaction(s) · Gap vs marché = acheteur/vendeur stratégique hors carnet</div>'
         + rows
-        + '<div style="font-size:9px;color:#4B5563;margin-top:6px">Bloc > 10 MDH = institutionnel. Prix > marché = acheteur agressif. Prix < marché = cession forcée.</div>'
+        + '<div style="font-size:9px;color:#8A93A3;margin-top:6px">Bloc > 10 MDH = institutionnel. Prix > marché = acheteur agressif. Prix < marché = cession forcée.</div>'
         '</div>'
     )
 
@@ -1341,10 +1343,10 @@ def render_seasonal_block(alerts):
     if not alerts: return ""
     rows = ""
     for a in alerts:
-        bias_col = "#00C87A" if a["bias"]=="HAUSSIER" else ("#FF4560" if a["bias"]=="BAISSIER" else "#C9A84C")
-        plays = " ".join(f'<span style="color:#00C87A;font-weight:700;font-size:10px">{t}</span>' for t in a["plays"])
-        avoid = " ".join(f'<span style="color:#FF4560;font-weight:700;font-size:10px">{t}</span>' for t in a["avoid"])
-        conf_col = "#00C87A" if a["confidence"]>=65 else "#C9A84C"
+        bias_col = "#34D399" if a["bias"]=="HAUSSIER" else ("#FF6B81" if a["bias"]=="BAISSIER" else "#D4B25A")
+        plays = " ".join(f'<span style="color:#34D399;font-weight:700;font-size:10px">{t}</span>' for t in a["plays"])
+        avoid = " ".join(f'<span style="color:#FF6B81;font-weight:700;font-size:10px">{t}</span>' for t in a["avoid"])
+        conf_col = "#34D399" if a["confidence"]>=65 else "#D4B25A"
         rows += (
             f'<div style="background:rgba(245,158,11,.05);border-left:3px solid {bias_col};'
             f'border-radius:4px;padding:10px;margin-bottom:8px">'
@@ -1360,7 +1362,7 @@ def render_seasonal_block(alerts):
 
     return (
         '<div class="sec" style="border-color:rgba(245,158,11,.3)">'
-        '<div class="st" style="color:#F59E0B">PATTERNS SAISONNIERS — CALENDAIRE BVC</div>'
+        '<div class="st" style="color:#FBBF24">PATTERNS SAISONNIERS — CALENDAIRE BVC</div>'
         f'<div style="font-size:9px;color:#6B7280;margin-bottom:8px">'
         f'{len(alerts)} pattern(s) actif(s) · Basé sur analyse historique 2022-2026 · Pas une certitude</div>'
         + rows
@@ -1470,13 +1472,13 @@ def get_sector_rotation_signal(macro, bvc_data):
 
         # Score sectoriel
         if score >= 2:
-            sig, col = "SURPONDÉRER", "#00C87A"
+            sig, col = "SURPONDÉRER", "#34D399"
         elif score == 1:
-            sig, col = "NEUTRE+", "#C9A84C"
+            sig, col = "NEUTRE+", "#D4B25A"
         elif score <= -2:
-            sig, col = "SOUS-PONDÉRER", "#FF4560"
+            sig, col = "SOUS-PONDÉRER", "#FF6B81"
         elif score == -1:
-            sig, col = "NEUTRE-", "#F59E0B"
+            sig, col = "NEUTRE-", "#FBBF24"
         else:
             sig, col = "NEUTRE", "#6B7280"
 
@@ -1506,12 +1508,12 @@ def render_sector_rotation_block(signals):
             f'<span style="background:{s["color"]}18;color:{s["color"]};font-size:9px;padding:2px 8px;border-radius:3px">{s["signal"]}</span>'
             f'</div>'
             f'<div style="font-size:10px;color:#6B7280;margin-top:3px">{fired_html}</div>'
-            f'<div style="font-size:9px;color:#4B5563;margin-top:2px">Historique: {s["peak"][:80]}...</div>'
+            f'<div style="font-size:9px;color:#8A93A3;margin-top:2px">Historique: {s["peak"][:80]}...</div>'
             f'</div>'
         )
     return (
         '<div class="sec" style="border-color:rgba(139,92,246,.3)">'
-        '<div class="st" style="color:#8B5CF6">ROTATION SECTORIELLE — PROXIES HISTORIQUES 10 ANS</div>'
+        '<div class="st" style="color:#A78BFA">ROTATION SECTORIELLE — PROXIES HISTORIQUES 10 ANS</div>'
         '<div style="font-size:9px;color:#6B7280;margin-bottom:8px">'
         'Corrélations historiques BVC 2014-2024 (hors covid). Proxies déclencheurs temps réel.</div>'
         + rows
@@ -2009,12 +2011,12 @@ def smart_money(bvc_data):
 def render_reco(rec, macro):
     t=rec["t"]; d=rec["d"]; i=rec["i"]; sc=rec["sc"]; close=rec["close"]
     is_buy=rec["is_buy"]; reason=rec["reason"]; tgt=rec["target"]; stop=rec["stop"]; rr=rec["rr"]; vr=rec["vr"]
-    ammc_t=rec["ammc"]; tf=rec["timeframe"]; col="#00C87A" if is_buy else "#FF4560"; label="ACHAT" if is_buy else "VENTE"
+    ammc_t=rec["ammc"]; tf=rec["timeframe"]; col="#34D399" if is_buy else "#FF6B81"; label="ACHAT" if is_buy else "VENTE"
     rsi=d.get("rsi",50); chg=d.get("change",0); ema20=d.get("ema20",0); ema200=d.get("ema200",0)
     macd_h="Haussier" if d.get("macd",0)>d.get("macd_s",0) else "Baissier"
-    macd_c="#00C87A" if d.get("macd",0)>d.get("macd_s",0) else "#FF4560"
+    macd_c="#34D399" if d.get("macd",0)>d.get("macd_s",0) else "#FF6B81"
     tf_labels={"day":"INTRADAY","week":"SEMAINE","quarter":"3 MOIS"}
-    tf_colors={"day":"#60A5FA","week":"#C9A84C","quarter":"#00C87A"}
+    tf_colors={"day":"#7DB8FF","week":"#D4B25A","quarter":"#34D399"}
     tgt_pct=round((tgt-close)/close*100,1); stp_pct=round(abs(close-stop)/close*100,1)
     cn = gnews(f"{i.get('n',t)} bourse Casablanca 2026", 2)
     sect=i.get("s",""); mc_ctx=""
@@ -2044,20 +2046,20 @@ Chiffres precis. 1 ligne chacun."""
         f'<div><div style="font-size:20px;font-weight:900;color:{col};font-family:monospace">{t}</div>'
         f'<div style="font-size:10px;color:#6B7280">{i.get("n","")} — {sect}</div></div>'
         f'<div style="text-align:right"><div style="font-size:16px;font-weight:900;color:#E8E4D6">{close:.2f} MAD</div>'
-        f'<div style="font-size:10px;color:{"#00C87A" if chg>=0 else "#FF4560"}">{chg:+.1f}% | Vol x{vr}</div>'
+        f'<div style="font-size:10px;color:{"#34D399" if chg>=0 else "#FF6B81"}">{chg:+.1f}% | Vol x{vr}</div>'
         f'<span style="background:{col}18;color:{col};border:1px solid {col}40;font-size:9px;padding:2px 8px;border-radius:3px">{label} {sc}/100</span>'
-        f'<div style="color:{tf_colors.get(tf,"#C9A84C")};font-size:8px;margin-top:2px">{tf_labels.get(tf,"")}</div></div></div>'
-        f'<div class="lv"><div style="font-size:8px;color:#C9A84C;margin-bottom:5px;letter-spacing:2px">NIVEAUX</div>'
+        f'<div style="color:{tf_colors.get(tf,"#D4B25A")};font-size:8px;margin-top:2px">{tf_labels.get(tf,"")}</div></div></div>'
+        f'<div class="lv"><div style="font-size:8px;color:#D4B25A;margin-bottom:5px;letter-spacing:2px">NIVEAUX</div>'
         f'<div class="lr"><span style="color:#6B7280">Entree</span><strong style="color:#E8E4D6">{close:.2f} MAD</strong></div>'
-        f'<div class="lr"><span style="color:#6B7280">Cible</span><strong style="color:#00C87A">{tgt:.2f} MAD ({sg(tgt_pct)}{tgt_pct}%)</strong></div>'
-        f'<div class="lr"><span style="color:#6B7280">Stop</span><strong style="color:#FF4560">{stop:.2f} MAD (-{stp_pct}%)</strong></div>'
-        f'<div class="lr"><span style="color:#6B7280">R/R</span><strong style="color:#C9A84C">{rr}</strong></div></div>'
+        f'<div class="lr"><span style="color:#6B7280">Cible</span><strong style="color:#34D399">{tgt:.2f} MAD ({sg(tgt_pct)}{tgt_pct}%)</strong></div>'
+        f'<div class="lr"><span style="color:#6B7280">Stop</span><strong style="color:#FF6B81">{stop:.2f} MAD (-{stp_pct}%)</strong></div>'
+        f'<div class="lr"><span style="color:#6B7280">R/R</span><strong style="color:#D4B25A">{rr}</strong></div></div>'
         f'<table style="width:100%;font-size:10px;border-collapse:collapse;margin:5px 0">'
-        f'<tr><td style="color:#6B7280">RSI</td><td style="color:{"#00C87A" if rsi<35 else "#FF4560" if rsi>70 else "#C9A84C"};font-weight:700">{rsi:.0f}</td>'
+        f'<tr><td style="color:#6B7280">RSI</td><td style="color:{"#34D399" if rsi<35 else "#FF6B81" if rsi>70 else "#D4B25A"};font-weight:700">{rsi:.0f}</td>'
         f'<td style="color:#6B7280">MACD</td><td style="color:{macd_c}">{macd_h}</td>'
         f'<td style="color:#6B7280">ADX</td><td style="color:#9CA3AF">{d.get("adx",0):.0f}</td></tr>'
-        f'<tr><td style="color:#6B7280">EMA20</td><td style="color:{"#00C87A" if close>ema20>0 else "#FF4560"}">{ema20:.2f}</td>'
-        f'<td style="color:#6B7280">EMA200</td><td style="color:{"#00C87A" if close>ema200>0 else "#FF4560"}">{">" if close>ema200>0 else "<"}{ema200:.0f}</td>'
+        f'<tr><td style="color:#6B7280">EMA20</td><td style="color:{"#34D399" if close>ema20>0 else "#FF6B81"}">{ema20:.2f}</td>'
+        f'<td style="color:#6B7280">EMA200</td><td style="color:{"#34D399" if close>ema200>0 else "#FF6B81"}">{">" if close>ema200>0 else "<"}{ema200:.0f}</td>'
         f'<td style="color:#6B7280">BB</td><td style="color:#9CA3AF">{"Basse" if d.get("bb_lower",0)>0 and close<=d.get("bb_lower",0)*1.01 else "Mid"}</td></tr></table>'
         + (f'<div style="margin-top:5px">{ammc_h}</div>' if ammc_h else "")
         + (f'<div style="margin-top:3px">{news_h}</div>' if news_h else "")
@@ -2185,10 +2187,10 @@ BULLETS (max 6):
 • [SECTEURS] 2 secteurs prioritaires"""
             deep_analysis = groq_call(prompt, 500) or "Analyse indisponible"
 
-        crisis_html = ("".join(f'<div class="imp"><span style="color:#FF4560;font-weight:900">⚠ {a}</span></div>' for a in crisis)) if crisis else ""
+        crisis_html = ("".join(f'<div class="imp"><span style="color:#FF6B81;font-weight:900">⚠ {a}</span></div>' for a in crisis)) if crisis else ""
 
         def ni_geo(items, src):
-            return "".join(f'<div class="ni"><span class="src" style="background:rgba(239,68,68,.15);color:#EF4444">{src}</span>{n}</div>' for n in items[:2]) if items else ""
+            return "".join(f'<div class="ni"><span class="src" style="background:rgba(239,68,68,.15);color:#F87171">{src}</span>{n}</div>' for n in items[:2]) if items else ""
 
         geo_html = ""
         if geo.get("iran_usa"):  geo_html += ni_geo(geo["iran_usa"],"Iran/USA")
@@ -2196,31 +2198,31 @@ BULLETS (max 6):
         if geo.get("ukraine"):   geo_html += ni_geo(geo["ukraine"],"Ukraine")
         if geo.get("fed"):       geo_html += ni_geo(geo["fed"],"Fed")
         if geo.get("petrole"):   geo_html += ni_geo(geo["petrole"],"Petrole")
-        if not geo_html: geo_html = '<div class="ni" style="color:#4B5563">Aucun evenement majeur</div>'
+        if not geo_html: geo_html = '<div class="ni" style="color:#8A93A3">Aucun evenement majeur</div>'
 
         ammc_html=""
         for a in ammc[:8]:
             badge_col, badge_txt = ammc_badge(a["type"])
             ammc_html+=(f'<div class="ni"><span class="src" style="background:{badge_col}18;color:{badge_col}">{"AMMC" if not badge_txt else badge_txt}</span>'
-                       f'{a["title"][:110]}' + (f' <strong style="color:#C9A84C">[{a["ticker"]}]</strong>' if a.get("ticker") else "") + '</div>')
-        if not ammc_html: ammc_html='<div class="ni" style="color:#4B5563">Aucune publication</div>'
+                       f'{a["title"][:110]}' + (f' <strong style="color:#D4B25A">[{a["ticker"]}]</strong>' if a.get("ticker") else "") + '</div>')
+        if not ammc_html: ammc_html='<div class="ni" style="color:#8A93A3">Aucune publication</div>'
 
         sec_html=""
         if sector_analysis:
             for line in sector_analysis.split("\n"):
                 if ":"in line and len(line)>5:
                     parts=line.split(":",1); name=parts[0].strip(); rest=parts[1].strip() if len(parts)>1 else ""
-                    col_s="#00C87A" if "ACHETER" in rest.upper() else ("#FF4560" if "EVITER" in rest.upper() else "#C9A84C")
+                    col_s="#34D399" if "ACHETER" in rest.upper() else ("#FF6B81" if "EVITER" in rest.upper() else "#D4B25A")
                     sec_html+=f'<div class="ni"><span style="color:{col_s};font-weight:700;min-width:90px;display:inline-block">{name}</span>{rest}</div>'
 
-        soc_html="".join(f'<div class="ni"><span class="src" style="background:rgba(139,92,246,.12);color:#8B5CF6">{s["src"]}</span>{s["t"][:120]}</div>' for s in social[:5]) or '<div class="ni" style="color:#4B5563">Aucun buzz</div>'
-        bn_html ="".join(f'<div class="ni"><span class="src g">BN</span>{n}</div>' for n in bn[:4]) or '<div class="ni" style="color:#4B5563">Aucune news</div>'
-        vix_col="#00C87A" if vix_p<20 else ("#C9A84C" if vix_p<30 else "#FF4560")
+        soc_html="".join(f'<div class="ni"><span class="src" style="background:rgba(139,92,246,.12);color:#A78BFA">{s["src"]}</span>{s["t"][:120]}</div>' for s in social[:5]) or '<div class="ni" style="color:#8A93A3">Aucun buzz</div>'
+        bn_html ="".join(f'<div class="ni"><span class="src g">BN</span>{n}</div>' for n in bn[:4]) or '<div class="ni" style="color:#8A93A3">Aucune news</div>'
+        vix_col="#34D399" if vix_p<20 else ("#D4B25A" if vix_p<30 else "#FF6B81")
         vix_lab="RISK ON" if vix_p<20 else ("NEUTRE" if vix_p<30 else "RISK OFF")
 
         cac_pm = media.get("cac40_pm",{}) if isinstance(media,dict) else {}
         cac_sig = cac_pm.get("signal","NEUTRE")
-        cac_col = "#00C87A" if cac_sig=="HAUSSIER" else ("#FF4560" if cac_sig=="BAISSIER" else "#C9A84C")
+        cac_col = "#34D399" if cac_sig=="HAUSSIER" else ("#FF6B81" if cac_sig=="BAISSIER" else "#D4B25A")
         cac_box = (f'<div class="sec" style="border-color:{cac_col}40"><div class="st" style="color:{cac_col}">CAC40 PRE-MARKET — OUVRE 1H AVANT BVC</div>'
                    f'<div style="font-size:13px;color:{cac_col};font-weight:700;margin-bottom:4px">{cac_sig}</div>'
                    f'<div style="font-size:12px;color:#E8E4D6">{cac_pm.get("impact","Donnees CAC40 indisponibles")}</div>'
@@ -2228,28 +2230,28 @@ BULLETS (max 6):
                    + '</div>') if cac_pm else ""
 
         trump = media.get("trump",[]) if isinstance(media,dict) else []
-        trump_box = ('<div class="geo" style="border-color:rgba(245,158,11,.4)"><div class="geot" style="color:#F59E0B">TRUMP — MARKET MOVERS</div>'
-                     + "".join(f'<div class="ni"><span class="src" style="background:rgba(245,158,11,.15);color:#F59E0B">TRUMP</span>{n}</div>' for n in trump[:5])
+        trump_box = ('<div class="geo" style="border-color:rgba(245,158,11,.4)"><div class="geot" style="color:#FBBF24">TRUMP — MARKET MOVERS</div>'
+                     + "".join(f'<div class="ni"><span class="src" style="background:rgba(245,158,11,.15);color:#FBBF24">TRUMP</span>{n}</div>' for n in trump[:5])
                      + '</div>') if trump else ""
 
         def media_block(items, src, col):
             if not items: return ""
             return "".join(f'<div class="ni"><span class="src" style="background:{col}18;color:{col}">{src}</span>{n}</div>' for n in items[:4])
 
-        geo_intl_html = media_block(media.get("bfm",[]) if isinstance(media,dict) else [], "BFM", "#60A5FA")
-        geo_intl_html += media_block(media.get("reuters_bb",[]) if isinstance(media,dict) else [], "R/BB", "#EF4444")
+        geo_intl_html = media_block(media.get("bfm",[]) if isinstance(media,dict) else [], "BFM", "#7DB8FF")
+        geo_intl_html += media_block(media.get("reuters_bb",[]) if isinstance(media,dict) else [], "R/BB", "#F87171")
         geo_intl_box = ('<div class="sec"><div class="st">GEOPOLITIQUE INTL — BFM / REUTERS / BLOOMBERG</div>' + geo_intl_html + '</div>') if geo_intl_html else ""
 
-        press_html = media_block(media.get("alphabourse",[]) if isinstance(media,dict) else [], "ALPHA", "#8B5CF6")
-        press_html += media_block(media.get("leconomiste",[]) if isinstance(media,dict) else [], "ECONO", "#00C87A")
-        press_html += media_block(media.get("lavieeco",[]) if isinstance(media,dict) else [], "VIEECO", "#C9A84C")
+        press_html = media_block(media.get("alphabourse",[]) if isinstance(media,dict) else [], "ALPHA", "#A78BFA")
+        press_html += media_block(media.get("leconomiste",[]) if isinstance(media,dict) else [], "ECONO", "#34D399")
+        press_html += media_block(media.get("lavieeco",[]) if isinstance(media,dict) else [], "VIEECO", "#D4B25A")
         press_box = ('<div class="sec"><div class="st">PRESSE MAROC — ALPHABOURSE / ECONOMISTE / VIE ECO</div>' + press_html + '</div>') if press_html else ""
 
-        html = f"""<!DOCTYPE html><html><head><meta charset="UTF-8">{CSS}</head>
+        html = f"""<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="color-scheme" content="dark"><meta name="supported-color-schemes" content="dark">{CSS}</head>
 <body><div class="w">
 <div class="hdr"><div class="logo">BARAKA</div><div class="sub">BRIEF OUVERTURE — {now}</div>
 <span class="bdg g" style="border-color:rgba(0,200,122,.4);background:rgba(0,200,122,.08)">BVC OUVRE DANS 1H</span>
-{f'<div style="font-size:9px;color:#4B5563;margin-top:4px">Analyse {cached_time}</div>' if cached_time else ""}</div>
+{f'<div style="font-size:9px;color:#8A93A3;margin-top:4px">Analyse {cached_time}</div>' if cached_time else ""}</div>
 
 {f'<div class="geo"><div class="geot">ALERTES CRISE MARCHES</div>{crisis_html}</div>' if crisis_html else ""}
 
@@ -2309,7 +2311,7 @@ BULLETS (max 6):
         print(f"[BRIEF] {e}")
         import traceback; traceback.print_exc()
         send_email("BARAKA — BRIEF OUVERTURE 07h30",
-            f"<div style='background:#080C14;color:#E8E4D6;padding:20px;font-family:monospace'><h2 style='color:#C9A84C'>BRIEF {datetime.datetime.now().strftime('%d/%m/%Y %H:%M')}</h2><p style='color:#FF4560'>{str(e)[:400]}</p></div>")
+            f"<div style='background:#080C14;color:#E8E4D6;padding:20px;font-family:monospace'><h2 style='color:#D4B25A'>BRIEF {datetime.datetime.now().strftime('%d/%m/%Y %H:%M')}</h2><p style='color:#FF6B81'>{str(e)[:400]}</p></div>")
 
 # ─── EMAIL 2: ANALYSE + RECOMMANDATIONS 11h00 UTC ────────────────────────────
 def analyse_entrees():
@@ -2321,7 +2323,7 @@ def analyse_entrees():
 
         if not bvc_data:
             send_email("BARAKA — ANALYSE 11h00",
-                "<div style='background:#080C14;color:#E8E4D6;padding:20px;font-family:monospace'><h2 style='color:#C9A84C'>TV Scanner indisponible</h2></div>")
+                "<div style='background:#080C14;color:#E8E4D6;padding:20px;font-family:monospace'><h2 style='color:#D4B25A'>TV Scanner indisponible</h2></div>")
             return
 
         exc_moves = exceptional_moves(bvc_data); used_tickers = set(e["t"] for e in exc_moves)
@@ -2402,35 +2404,35 @@ def analyse_entrees():
             vi=BVC.get(vt,{}); vc=vd.get("close",0); vchg=vd.get("change",0)
             vrsi=vd.get("rsi",50); vsc=tech_score(vd,vi,macro)
             vvr=round(vd.get("volume",0)/max(vd.get("avg_vol",1),1),1)
-            vcol="#00C87A" if vsc>=65 else ("#FF4560" if vsc<=35 else "#C9A84C")
+            vcol="#34D399" if vsc>=65 else ("#FF6B81" if vsc<=35 else "#D4B25A")
             vip_html+=(f'<div class="vip" style="border-left:3px solid {vcol}"><div style="display:flex;justify-content:space-between">'
                        f'<span style="color:{vcol};font-weight:900;font-family:monospace;font-size:15px">{vt}</span>'
                        f'<span style="color:#9CA3AF;font-size:10px">{vi.get("n","")} | {vi.get("s","")}</span>'
                        f'<div style="text-align:right"><span style="color:#E8E4D6;font-weight:700">{vc:.2f} MAD</span>'
-                       f' <span style="color:{"#00C87A" if vchg>=0 else "#FF4560"};font-size:10px">{vchg:+.1f}%</span>'
+                       f' <span style="color:{"#34D399" if vchg>=0 else "#FF6B81"};font-size:10px">{vchg:+.1f}%</span>'
                        f'<div style="color:#9CA3AF;font-size:10px">RSI {vrsi:.0f} | Vol x{vvr} | Score {vsc}/100</div></div></div></div>')
 
-        crisis_banner = ("".join(f'<div class="imp"><span style="color:#FF4560;font-weight:900">⚠ {a}</span></div>' for a in crisis)) if crisis else ""
+        crisis_banner = ("".join(f'<div class="imp"><span style="color:#FF6B81;font-weight:900">⚠ {a}</span></div>' for a in crisis)) if crisis else ""
 
         exc_html=""
         if exc_moves:
             exc_html='<div class="sec"><div class="st">MOUVEMENTS EXCEPTIONNELS (> 5%)</div>'
             for e in exc_moves[:5]:
-                dc="#00C87A" if e["chg"]>0 else "#FF4560"
+                dc="#34D399" if e["chg"]>0 else "#FF6B81"
                 exc_html+=(f'<div class="exc"><span style="color:{dc};font-weight:900;font-family:monospace">{e["t"]}</span> {e["n"]} | {e["s"]}<br>'
                            f'<span style="color:{dc};font-size:13px;font-weight:700">{e["chg"]:+.1f}% ({e["close"]:.2f} MAD)</span>'
                            f' | RSI {e["rsi"]:.0f} | Vol x{e["vr"]}<br>'
-                           f'<span style="color:#C9A84C;font-size:11px">{e["note"]}</span></div>')
+                           f'<span style="color:#D4B25A;font-size:11px">{e["note"]}</span></div>')
             exc_html+='</div>'
 
         sm_html=""
         if sm:
             sm_rows="".join(
                 f'<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid rgba(255,255,255,.04);font-size:11px">'
-                f'<span style="color:#F59E0B;font-weight:700;font-family:monospace;min-width:70px">{s["t"]}</span>'
+                f'<span style="color:#FBBF24;font-weight:700;font-family:monospace;min-width:70px">{s["t"]}</span>'
                 f'<span style="color:#9CA3AF;flex:1">{s["n"][:20]}</span>'
-                f'<span style="color:#F59E0B;font-weight:700">x{s["vr"]}</span>'
-                f'<span style="color:{"#00C87A" if s["chg"]>=0 else "#FF4560"};margin-left:8px">{s["chg"]:+.1f}%</span>'
+                f'<span style="color:#FBBF24;font-weight:700">x{s["vr"]}</span>'
+                f'<span style="color:{"#34D399" if s["chg"]>=0 else "#FF6B81"};margin-left:8px">{s["chg"]:+.1f}%</span>'
                 f'<span style="color:#6B7280;margin-left:8px;font-size:10px">RSI {s["rsi"]:.0f}</span></div>'
                 for s in sm[:6])
             sm_html=f'<div class="sec"><div class="st">SMART MONEY — VOL > 2.5x MOY.90J</div>{sm_rows}</div>'
@@ -2442,14 +2444,14 @@ def analyse_entrees():
 
         sect_html="".join(
             f'<div style="display:flex;justify-content:space-between;align-items:center;padding:4px 0">'
-            f'<span style="color:{"#00C87A" if i<3 else "#C9A84C" if i<6 else "#6B7280"};font-size:11px">{"🟢" if i<3 else "🟡" if i<6 else "⚪"} {sn}</span>'
-            f'<div style="flex:1;margin:0 8px;background:#080C14;border-radius:2px;height:4px"><div style="height:100%;border-radius:2px;width:{min(100,int(ss))}%;background:{"#00C87A" if i<3 else "#C9A84C" if i<6 else "#4B5563"}"></div></div>'
+            f'<span style="color:{"#34D399" if i<3 else "#D4B25A" if i<6 else "#6B7280"};font-size:11px">{"🟢" if i<3 else "🟡" if i<6 else "⚪"} {sn}</span>'
+            f'<div style="flex:1;margin:0 8px;background:#080C14;border-radius:2px;height:4px"><div style="height:100%;border-radius:2px;width:{min(100,int(ss))}%;background:{"#34D399" if i<3 else "#D4B25A" if i<6 else "#8A93A3"}"></div></div>'
             f'<span style="color:#6B7280;font-size:10px">{ss:.0f}</span></div>'
             for i,(sn,ss) in enumerate(sect_rank[:8]))
 
         sp_c=macro.get("sp500",{}).get("c",0); mad=macro.get("usd_mad",10.0)
 
-        html = f"""<!DOCTYPE html><html><head><meta charset="UTF-8">{CSS}</head>
+        html = f"""<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="color-scheme" content="dark"><meta name="supported-color-schemes" content="dark">{CSS}</head>
 <body><div class="w">
 <div class="hdr"><div class="logo">BARAKA</div><div class="sub">ANALYSE + RECOMMANDATIONS — {now}</div>
 <span class="bdg go" style="border-color:rgba(201,168,76,.4);background:rgba(201,168,76,.08)">{len(bvc_data)} TITRES — 3 HORIZONS</span></div>
@@ -2506,7 +2508,7 @@ def analyse_entrees():
 <div class="sec"><div class="st">MOMENTUM SECTORIEL BVC</div>{sect_html}</div>
 
 <div class="sec"><div class="st">ZOOM VIP</div>
-<div style="font-size:9px;color:#F59E0B;margin-bottom:8px">Alliances • TGCC • Addoha • SGTM • Dar Saada • Akdital • Managem • SMI • CMT</div>
+<div style="font-size:9px;color:#FBBF24;margin-bottom:8px">Alliances • TGCC • Addoha • SGTM • Dar Saada • Akdital • Managem • SMI • CMT</div>
 {vip_html or '<div style="color:#6B7280">Titres VIP non disponibles</div>'}
 </div>
 
@@ -2523,7 +2525,7 @@ Prochain: 15h30 — Post-Cloture Smart Money<br><strong class="go">BARAKA v7.2</
         print(f"[ANALYSE] {e}")
         import traceback; traceback.print_exc()
         send_email("BARAKA — ANALYSE 11h00",
-            f"<div style='background:#080C14;color:#E8E4D6;padding:20px;font-family:monospace'><h2 style='color:#C9A84C'>ANALYSE {datetime.datetime.now().strftime('%d/%m/%Y %H:%M')}</h2><p style='color:#FF4560'>{str(e)[:400]}</p></div>")
+            f"<div style='background:#080C14;color:#E8E4D6;padding:20px;font-family:monospace'><h2 style='color:#D4B25A'>ANALYSE {datetime.datetime.now().strftime('%d/%m/%Y %H:%M')}</h2><p style='color:#FF6B81'>{str(e)[:400]}</p></div>")
 
 # ─── EMAIL 3: POST-CLOTURE 14h30 UTC ─────────────────────────────────────────
 def post_cloture():
@@ -2567,14 +2569,14 @@ def post_cloture():
         for s in sm[:5]:
             t=s["t"]; info=BVC.get(t,{})
             ammc_t=[a for a in ammc_pubs if a.get("ticker")==t][:1]
-            ammc_l=f'<div style="font-size:10px;color:#60A5FA">{ammc_badge(ammc_t[0]["type"])[1]} {ammc_t[0]["title"][:90]}</div>' if ammc_t else ""
-            sm_cards+=(f'<div style="background:#13192A;border-radius:8px;padding:11px;margin-bottom:7px;border-left:3px solid #F59E0B">'
-                       f'<div style="display:flex;justify-content:space-between"><span style="color:#F59E0B;font-weight:900;font-family:monospace;font-size:15px">{t}</span>'
-                       f'<span style="color:#F59E0B;font-weight:700">VOLUME x{s["vr"]}</span></div>'
+            ammc_l=f'<div style="font-size:10px;color:#7DB8FF">{ammc_badge(ammc_t[0]["type"])[1]} {ammc_t[0]["title"][:90]}</div>' if ammc_t else ""
+            sm_cards+=(f'<div style="background:#13192A;border-radius:8px;padding:11px;margin-bottom:7px;border-left:3px solid #FBBF24">'
+                       f'<div style="display:flex;justify-content:space-between"><span style="color:#FBBF24;font-weight:900;font-family:monospace;font-size:15px">{t}</span>'
+                       f'<span style="color:#FBBF24;font-weight:700">VOLUME x{s["vr"]}</span></div>'
                        f'<div style="color:#9CA3AF;font-size:11px">{info.get("n","")} — {info.get("s","")}</div>'
                        f'<div style="font-size:11px;margin-top:5px;display:flex;gap:12px;flex-wrap:wrap">'
                        f'<span style="color:#6B7280">Cloture <strong style="color:#E8E4D6">{s["c"]:.2f} MAD</strong></span>'
-                       f'<span style="color:{"#00C87A" if s["chg"]>=0 else "#FF4560"};font-weight:700">{s["chg"]:+.1f}%</span>'
+                       f'<span style="color:{"#34D399" if s["chg"]>=0 else "#FF6B81"};font-weight:700">{s["chg"]:+.1f}%</span>'
                        f'<span style="color:#9CA3AF">RSI {s["rsi"]:.0f}</span></div>'
                        + ammc_l + '</div>')
 
@@ -2582,7 +2584,7 @@ def post_cloture():
         if exc:
             exc_html2='<div class="sec"><div class="st">MOUVEMENTS DU JOUR > 5%</div>'
             for e in exc[:4]:
-                dc="#00C87A" if e["chg"]>0 else "#FF4560"
+                dc="#34D399" if e["chg"]>0 else "#FF6B81"
                 exc_html2+=f'<div class="exc"><span style="color:{dc};font-weight:900">{e["t"]} {e["chg"]:+.1f}%</span> — {e["n"]} | {e["note"]}</div>'
             exc_html2+='</div>'
 
@@ -2591,7 +2593,7 @@ def post_cloture():
             t=item["t"]; d=item["d"]; info=BVC.get(t,{})
             close=d.get("close",0); sc=item["sc"]
             is_buy_p=d.get("macd",0)>d.get("macd_s",0) and d.get("rsi",50)<65
-            col_p="#00C87A" if is_buy_p else "#FF4560"
+            col_p="#34D399" if is_buy_p else "#FF6B81"
             tgt_p=round(close*(1.05 if is_buy_p else 0.95),2); stp_p=round(close*(0.97 if is_buy_p else 1.03),2)
             vr_p=round(d.get("volume",0)/max(d.get("avg_vol",1),1),1)
             paris_html+=(f'<div style="background:#13192A;border-radius:8px;padding:9px;margin-bottom:7px;border-left:3px solid {col_p}">'
@@ -2600,10 +2602,10 @@ def post_cloture():
                          f'<span style="color:#9CA3AF;font-size:10px">{info.get("n","")} | Score {sc}/100 | Vol x{vr_p}</span></div>'
                          f'<div style="font-size:11px;color:#6B7280;margin-top:4px">'
                          f'Entree: <strong style="color:#E8E4D6">{close:.2f}</strong> — '
-                         f'Cible: <strong style="color:#00C87A">{tgt_p:.2f}</strong> — '
-                         f'Stop: <strong style="color:#FF4560">{stp_p:.2f}</strong></div></div>')
+                         f'Cible: <strong style="color:#34D399">{tgt_p:.2f}</strong> — '
+                         f'Stop: <strong style="color:#FF6B81">{stp_p:.2f}</strong></div></div>')
 
-        html = f"""<!DOCTYPE html><html><head><meta charset="UTF-8">{CSS}</head>
+        html = f"""<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="color-scheme" content="dark"><meta name="supported-color-schemes" content="dark">{CSS}</head>
 <body><div class="w">
 <div class="hdr"><div class="logo">BARAKA</div><div class="sub">POST-CLOTURE — {now}</div>
 <span class="bdg or" style="border-color:rgba(245,158,11,.4);background:rgba(245,158,11,.08)">{len(sm)} SMART MONEY | {len(exc)} MOUVEMENTS EXCEPTIONNELS</span></div>
@@ -2634,7 +2636,7 @@ def post_cloture():
         print(f"[CLOTURE] {e}")
         import traceback; traceback.print_exc()
         send_email("BARAKA — POST-CLOTURE 14h30",
-            f"<div style='background:#080C14;color:#E8E4D6;padding:20px;font-family:monospace'><h2 style='color:#C9A84C'>POST-CLOTURE {datetime.datetime.now().strftime('%d/%m/%Y %H:%M')}</h2><p style='color:#FF4560'>{str(e)[:400]}</p></div>")
+            f"<div style='background:#080C14;color:#E8E4D6;padding:20px;font-family:monospace'><h2 style='color:#D4B25A'>POST-CLOTURE {datetime.datetime.now().strftime('%d/%m/%Y %H:%M')}</h2><p style='color:#FF6B81'>{str(e)[:400]}</p></div>")
 
 
 # ─── SURVEILLANCE TRIGGERS ────────────────────────────────────────────────────
@@ -2663,7 +2665,7 @@ def monitor_triggers():
             if triggered:
                 is_stop  = any("STOP" in t["msg"] for t in triggered)
                 is_target= any("CIBLE" in t["msg"] for t in triggered)
-                urg_col  = "#FF4560" if any(t["urg"]=="CRITICAL" for t in triggered) else "#F59E0B"
+                urg_col  = "#FF6B81" if any(t["urg"]=="CRITICAL" for t in triggered) else "#FBBF24"
                 prefix   = "STOP" if is_stop else ("CIBLE" if is_target else "TRIGGER")
                 action   = ("SORTIR IMMEDIATEMENT" if is_stop else
                            f"PRENDRE PROFIT +{round((close-wl['entry'])/wl['entry']*100,1)}%" if is_target else
@@ -2675,7 +2677,7 @@ def monitor_triggers():
                     for t in triggered
                 )
                 html=(
-                    f'<!DOCTYPE html><html><head><meta charset="UTF-8">{CSS}</head><body><div class="w">'
+                    f'<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="color-scheme" content="dark"><meta name="supported-color-schemes" content="dark">{CSS}</head><body><div class="w">'
                     f'<div class="hdr" style="border-color:{urg_col}60"><div class="logo">BARAKA</div>'
                     f'<div class="sub">ALERTE {prefix} — {datetime.datetime.now().strftime("%d/%m/%Y %H:%M")}</div></div>'
                     f'<div style="background:#13192A;border-radius:10px;padding:14px;margin-bottom:10px">'
@@ -2717,11 +2719,11 @@ def get_cb_director_news():
         for n in gnews(q, 2):
             nl = n.lower()
             if any(w in nl for w in ["hausse","hike","hawkish","resserrement","augmente","+25 bps"]):
-                tone, col = "🔴 HAWKISH", "#FF4560"
+                tone, col = "🔴 HAWKISH", "#FF6B81"
             elif any(w in nl for w in ["baisse","cut","dovish","assouplissement","-25 bps","réduit"]):
-                tone, col = "🟢 DOVISH", "#00C87A"
+                tone, col = "🟢 DOVISH", "#34D399"
             elif any(w in nl for w in ["maintien","pause","stable","inchangé","hold"]):
-                tone, col = "🟡 MAINTIEN", "#C9A84C"
+                tone, col = "🟡 MAINTIEN", "#D4B25A"
             else:
                 tone, col = "⚪ INFO", "#6B7280"
             results.append({"label": label, "news": n[:160], "tone": tone, "color": col})
@@ -2746,7 +2748,7 @@ def render_cb_directors_block(items):
     )
     return (
         '<div class="sec" style="border-color:rgba(96,165,250,.25)">'
-        '<div class="st" style="color:#60A5FA">VEILLE DIRECTEURS BC — JOUAHRI / WARSH / LAGARDE / UEDA</div>'
+        '<div class="st" style="color:#7DB8FF">VEILLE DIRECTEURS BC — JOUAHRI / WARSH / LAGARDE / UEDA</div>'
         '<div style="font-size:9px;color:#6B7280;margin-bottom:6px">Signaux hawkish/dovish avant réunions officielles — indicateur avancé</div>'
         + rows + '</div>'
     )
@@ -2796,10 +2798,10 @@ def get_dividend_alerts(bvc_data=None, window_days=21):
         rdmt   = div["yield_pct"]
 
         if   delta < 0:  status, urg = f"EX-DATE J+{-delta}", "#6B7280"
-        elif delta == 0: status, urg = "AUJOURD'HUI ⚡",       "#FF4560"
-        elif delta == 1: status, urg = "DEMAIN 🔴",            "#FF4560"
-        elif delta <= 5: status, urg = f"J-{delta} SEMAINE",   "#F59E0B"
-        else:            status, urg = f"J-{delta}",            "#C9A84C"
+        elif delta == 0: status, urg = "AUJOURD'HUI ⚡",       "#FF6B81"
+        elif delta == 1: status, urg = "DEMAIN 🔴",            "#FF6B81"
+        elif delta <= 5: status, urg = f"J-{delta} SEMAINE",   "#FBBF24"
+        else:            status, urg = f"J-{delta}",            "#D4B25A"
 
         # Analyse stratégie double gains
         if 1 <= delta <= 5:
@@ -2838,7 +2840,7 @@ def render_dividend_block(alerts, div_news, weekly=False):
             f' <span style="color:#6B7280;font-size:10px">{d["name"]}</span></div>'
             f'<div style="text-align:right">'
             f'<div style="color:{d["color"]};font-weight:700;font-size:11px">{d["status"]}</div>'
-            f'<div style="color:#4B5563;font-size:9px">{d["detach"]}</div></div></div>'
+            f'<div style="color:#8A93A3;font-size:9px">{d["detach"]}</div></div></div>'
             f'<div class="mg" style="margin-bottom:5px">'
             f'<div class="mb"><div class="ml">Dividende</div><div class="mv go">{d["amount"]:.0f} MAD</div></div>'
             f'<div class="mb"><div class="ml">Rendement</div><div class="mv go">{d["yield_pct"]:.1f}%</div></div>'
@@ -2851,12 +2853,12 @@ def render_dividend_block(alerts, div_news, weekly=False):
     title = "📅 LUNDI — DIVIDENDES DE LA SEMAINE" if weekly else "DIVIDENDES — OPPORTUNITÉS DÉTACHEMENT"
     return (
         '<div class="sec" style="border-color:rgba(0,200,122,.3)">'
-        f'<div class="st" style="color:#00C87A">{title}</div>'
+        f'<div class="st" style="color:#34D399">{title}</div>'
         f'<div style="font-size:9px;color:#6B7280;margin-bottom:8px">'
         f'Stratégie double: toucher dividende + rebond post-détachement (hist. ~3j). '
         f'{len(alerts)} titre(s) dans la fenêtre.</div>'
         + rows + news_html
-        + '<div style="font-size:9px;color:#4B5563;margin-top:5px">Dates à confirmer · Rebond post-détach. estimé à 70% du dividende sur 3 séances (historique BVC 2022-2025)</div>'
+        + '<div style="font-size:9px;color:#8A93A3;margin-top:5px">Dates à confirmer · Rebond post-détach. estimé à 70% du dividende sur 3 séances (historique BVC 2022-2025)</div>'
         '</div>'
     )
 
@@ -2953,9 +2955,9 @@ def render_macro_risk_block(risks, news, groq_txt):
     if not risks and not news and not groq_txt: return ""
     rows = ""
     for r in risks:
-        pts_col = "#FF4560" if r["masi_pts"] < -300 else "#F59E0B"
-        dn = " ".join(f'<span style="color:#FF4560;font-size:9px;font-family:monospace">{t}</span>' for t in r["sectors_down"])
-        up = " ".join(f'<span style="color:#00C87A;font-size:9px;font-family:monospace">{t}</span>' for t in r["sectors_up"])
+        pts_col = "#FF6B81" if r["masi_pts"] < -300 else "#FBBF24"
+        dn = " ".join(f'<span style="color:#FF6B81;font-size:9px;font-family:monospace">{t}</span>' for t in r["sectors_down"])
+        up = " ".join(f'<span style="color:#34D399;font-size:9px;font-family:monospace">{t}</span>' for t in r["sectors_up"])
         rows += (
             f'<div class="geo" style="border-color:rgba(239,68,68,.3);margin-bottom:8px">'
             f'<div class="geot">🚨 {r["label"]}</div>'
@@ -2966,15 +2968,15 @@ def render_macro_risk_block(risks, news, groq_txt):
             f'<div style="font-size:9px;margin-top:4px">Pression: {dn} &nbsp;·&nbsp; Refuge: {up}</div>'
             f'</div>'
         )
-    news_html = "".join(f'<div class="ni"><span class="src" style="background:rgba(239,68,68,.12);color:#EF4444">RISK</span>{n}</div>' for n in news)
+    news_html = "".join(f'<div class="ni"><span class="src" style="background:rgba(239,68,68,.12);color:#F87171">RISK</span>{n}</div>' for n in news)
     groq_html = (f'<div class="sy" style="margin-top:8px"><div class="syt">IMPACT BVC NON ENCORE PRICÉ</div>'
                  f'<div class="sytx">{groq_txt}</div></div>') if groq_txt else ""
     return (
         '<div class="sec" style="border-color:rgba(239,68,68,.4)">'
-        '<div class="st" style="color:#EF4444">RISQUES MACRO — CARRY TRADE / IA CAPS / CHOCS GLOBAUX</div>'
+        '<div class="st" style="color:#F87171">RISQUES MACRO — CARRY TRADE / IA CAPS / CHOCS GLOBAUX</div>'
         '<div style="font-size:9px;color:#6B7280;margin-bottom:8px">'
         'BVC Casablanca en retard 1-3 séances sur les chocs mondiaux. Anticiper avant pricing.</div>'
-        + (rows or '<div style="color:#4B5563;font-size:11px;padding:4px 0">Aucun risque macro critique détecté</div>')
+        + (rows or '<div style="color:#8A93A3;font-size:11px;padding:4px 0">Aucun risque macro critique détecté</div>')
         + news_html + groq_html + '</div>'
     )
 
@@ -3003,7 +3005,7 @@ def get_ammc_synthesis(pubs):
 def render_ammc_synthesis_block(data):
     """Bloc HTML AMMC enrichi."""
     if not data or data["total"] == 0: return ""
-    COLORS = {"warning":"#FF4560","resultats":"#60A5FA","dividende":"#00C87A","operation":"#F59E0B"}
+    COLORS = {"warning":"#FF6B81","resultats":"#7DB8FF","dividende":"#34D399","operation":"#FBBF24"}
     ICONS  = {"warning":"🚨","resultats":"📊","dividende":"💰","operation":"🏦"}
 
     def _row(ptype, pubs):
@@ -3018,16 +3020,16 @@ def render_ammc_synthesis_block(data):
 
     pubs_html = _row("warning",data["warnings"]) + _row("resultats",data["results"]) + _row("dividende",data["divs"]) + _row("operation",data["ops"])
     synth_html = (
-        f'<div style="background:rgba(96,165,250,.06);border-left:3px solid #60A5FA;'
+        f'<div style="background:rgba(96,165,250,.06);border-left:3px solid #7DB8FF;'
         f'border-radius:4px;padding:10px;margin-top:8px">'
-        f'<div style="font-size:9px;color:#60A5FA;margin-bottom:5px">SYNTHÈSE · EN LIGNE / SURPRISE / DÉCEPTION</div>'
+        f'<div style="font-size:9px;color:#7DB8FF;margin-bottom:5px">SYNTHÈSE · EN LIGNE / SURPRISE / DÉCEPTION</div>'
         f'<div style="font-size:11px;color:#E8E4D6;line-height:1.8;white-space:pre-line">{data["synth"]}</div>'
         f'</div>'
     ) if data["synth"] else ""
 
     return (
         '<div class="sec" style="border-color:rgba(96,165,250,.3)">'
-        f'<div class="st" style="color:#60A5FA">AMMC — SYNTHÈSE & ALIGNMENT ({data["total"]} publications)</div>'
+        f'<div class="st" style="color:#7DB8FF">AMMC — SYNTHÈSE & ALIGNMENT ({data["total"]} publications)</div>'
         + pubs_html + synth_html + '</div>'
     )
 
@@ -3062,7 +3064,7 @@ def render_opci_block(alerts):
     """Bloc HTML OPCI."""
     if not alerts: return ""
     rows = "".join(
-        f'<div style="background:rgba(139,92,246,.06);border-left:3px solid #8B5CF6;'
+        f'<div style="background:rgba(139,92,246,.06);border-left:3px solid #A78BFA;'
         f'border-radius:4px;padding:9px;margin-bottom:7px">'
         f'<div style="font-size:11px;color:#E8E4D6;margin-bottom:5px">{a["news"]}</div>'
         + (
@@ -3079,11 +3081,11 @@ def render_opci_block(alerts):
     )
     return (
         '<div class="sec" style="border-color:rgba(139,92,246,.3)">'
-        '<div class="st" style="color:#8B5CF6">OPCI MAROC — PRESSION VENTE SUR BVC</div>'
+        '<div class="st" style="color:#A78BFA">OPCI MAROC — PRESSION VENTE SUR BVC</div>'
         '<div style="font-size:9px;color:#6B7280;margin-bottom:8px">'
         'Appels de fonds OPCI → ventes estimées 30% en actions BVC → impact MASI</div>'
         + rows
-        + '<div style="font-size:9px;color:#4B5563;margin-top:4px">Hyp: 30% levée en actions · Capi MASI ~700 MMDH · Estimatif</div>'
+        + '<div style="font-size:9px;color:#8A93A3;margin-top:4px">Hyp: 30% levée en actions · Capi MASI ~700 MMDH · Estimatif</div>'
         '</div>'
     )
 
@@ -3098,11 +3100,11 @@ def get_flow_analysis(bvc_data):
         vr = vol/avg; rsi = d.get("rsi",50)
         if not close or vr < 0.3: continue
 
-        if   vr >= 3.0 and chg >  1.0: flow, col, score = "INSTITUTIONNEL ACHETEUR",        "#00C87A", 5
-        elif vr >= 3.0 and chg < -1.0: flow, col, score = "INSTITUTIONNEL VENDEUR",          "#FF4560", -5
-        elif vr >= 2.0 and chg >  0.5: flow, col, score = "INSTITUTIONNEL HAUSSIER",         "#C9A84C", 3
-        elif vr >= 2.0 and chg < -0.5: flow, col, score = "DISTRIBUTION INSTITUTIONNELLE",   "#F59E0B", -3
-        elif vr <  0.7 and abs(chg) > 1.5: flow, col, score = "RETAIL / SPÉCULATIF",         "#8B5CF6", 0
+        if   vr >= 3.0 and chg >  1.0: flow, col, score = "INSTITUTIONNEL ACHETEUR",        "#34D399", 5
+        elif vr >= 3.0 and chg < -1.0: flow, col, score = "INSTITUTIONNEL VENDEUR",          "#FF6B81", -5
+        elif vr >= 2.0 and chg >  0.5: flow, col, score = "INSTITUTIONNEL HAUSSIER",         "#D4B25A", 3
+        elif vr >= 2.0 and chg < -0.5: flow, col, score = "DISTRIBUTION INSTITUTIONNELLE",   "#FBBF24", -3
+        elif vr <  0.7 and abs(chg) > 1.5: flow, col, score = "RETAIL / SPÉCULATIF",         "#A78BFA", 0
         else: continue
 
         info = BVC.get(ticker,{})
@@ -3123,18 +3125,18 @@ def render_flow_block(flows):
         f' <span style="color:#6B7280;font-size:9px">{f["sector"]}</span></div>'
         f'<span style="color:{f["color"]};font-size:10px;flex:1;text-align:center">{f["flow"]}</span>'
         f'<div style="text-align:right;font-size:10px">'
-        f'<span style="color:{"#00C87A" if f["change"]>=0 else "#FF4560"}">{f["change"]:+.1f}%</span>'
-        f' · <span style="color:#F59E0B">x{f["vr"]}</span>'
+        f'<span style="color:{"#34D399" if f["change"]>=0 else "#FF6B81"}">{f["change"]:+.1f}%</span>'
+        f' · <span style="color:#FBBF24">x{f["vr"]}</span>'
         f' · <span style="color:#6B7280">RSI{f["rsi"]:.0f}</span></div></div>'
         for f in flows
     )
     return (
         '<div class="sec" style="border-color:rgba(245,158,11,.25)">'
-        '<div class="st" style="color:#F59E0B">FLUX — RETAIL vs INSTITUTIONNEL</div>'
+        '<div class="st" style="color:#FBBF24">FLUX — RETAIL vs INSTITUTIONNEL</div>'
         '<div style="font-size:9px;color:#6B7280;margin-bottom:8px">'
         'Vol>3×moy+cours+ = institutionnel acheteur · Vol<0.7×moy+mouvement = retail spéculatif</div>'
         + rows
-        + '<div style="font-size:9px;color:#4B5563;margin-top:5px">Proxy imparfait — confirmer avec marché de blocs</div>'
+        + '<div style="font-size:9px;color:#8A93A3;margin-top:5px">Proxy imparfait — confirmer avec marché de blocs</div>'
         '</div>'
     )
 
@@ -3152,7 +3154,7 @@ def weekly_digest():
         cb_dirs  = get_cb_director_news()
         mac_risk, risk_news, groq_risk = get_macro_risks(macro)
 
-        html = f"""<!DOCTYPE html><html><head><meta charset="UTF-8">{CSS}</head>
+        html = f"""<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="color-scheme" content="dark"><meta name="supported-color-schemes" content="dark">{CSS}</head>
 <body><div class="w">
 <div class="hdr">
   <div class="logo">BARAKA</div>
@@ -3371,21 +3373,21 @@ def render_conviction_call(best_buy, best_sell, groq_analysis):
         filled = min(total, n_pos)
         bar = "".join(
             f'<div style="width:28px;height:28px;border-radius:4px;margin:2px;display:inline-block;'
-            f'background:{"#00C87A" if i < filled else "#1A2030"};'
-            f'border:1px solid {"#00C87A" if i < filled else "#2A3040"}"></div>'
+            f'background:{"#34D399" if i < filled else "#1A2030"};'
+            f'border:1px solid {"#34D399" if i < filled else "#2A3040"}"></div>'
             for i in range(total)
         )
         return bar
 
     def _card(c, direction="ACHAT"):
-        col = "#00C87A" if direction=="ACHAT" else "#FF4560"
+        col = "#34D399" if direction=="ACHAT" else "#FF6B81"
         score_txt = f"{c['score']:+d}/+10" if direction=="ACHAT" else f"{c['score']:+d}/-10"
         pos_html = "".join(
-            f'<div style="font-size:10px;color:#00C87A;padding:2px 0">✓ {k}</div>'
+            f'<div style="font-size:10px;color:#34D399;padding:2px 0">✓ {k}</div>'
             for k in c["positives"]
         )
         neg_html = "".join(
-            f'<div style="font-size:10px;color:#FF4560;padding:2px 0">✗ {k}</div>'
+            f'<div style="font-size:10px;color:#FF6B81;padding:2px 0">✗ {k}</div>'
             for k in c["negatives"]
         )
         # Niveaux techniques
@@ -3405,7 +3407,7 @@ def render_conviction_call(best_buy, best_sell, groq_analysis):
             f'</div>'
             f'<div style="text-align:right">'
             f'<div style="font-size:22px;font-weight:900;color:#E8E4D6">{c["close"]:,.0f}</div>'
-            f'<div style="color:{"#00C87A" if c["change"]>=0 else "#FF4560"};font-size:11px">{c["change"]:+.1f}% · Vol x{c["vr"]}</div>'
+            f'<div style="color:{"#34D399" if c["change"]>=0 else "#FF6B81"};font-size:11px">{c["change"]:+.1f}% · Vol x{c["vr"]}</div>'
             f'<div style="background:{col}20;color:{col};border:1px solid {col}50;font-size:10px;padding:2px 10px;border-radius:4px;margin-top:3px">'
             f'{direction} — {score_txt} signaux</div>'
             f'</div></div>'
@@ -3417,19 +3419,19 @@ def render_conviction_call(best_buy, best_sell, groq_analysis):
             # Signaux détail
             f'<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:10px">'
             f'<div style="background:#080C14;border-radius:6px;padding:8px">'
-            f'<div style="font-size:8px;color:#00C87A;margin-bottom:4px">FAVORABLES</div>'
+            f'<div style="font-size:8px;color:#34D399;margin-bottom:4px">FAVORABLES</div>'
             + pos_html +
             f'</div>'
             f'<div style="background:#080C14;border-radius:6px;padding:8px">'
-            f'<div style="font-size:8px;color:#FF4560;margin-bottom:4px">CONTRE / ABSENTS</div>'
+            f'<div style="font-size:8px;color:#FF6B81;margin-bottom:4px">CONTRE / ABSENTS</div>'
             + neg_html +
             f'</div></div>'
             # Niveaux
             f'<div class="lv" style="border-color:{col}40">'
             f'<div class="lr"><span style="color:#6B7280">Entrée suggérée</span><strong style="color:#E8E4D6">{close:,.0f} MAD</strong></div>'
-            f'<div class="lr"><span style="color:#6B7280">Cible</span><strong style="color:#00C87A">{tgt:,.0f} MAD (+{round((tgt-close)/close*100,1)}%)</strong></div>'
-            f'<div class="lr"><span style="color:#6B7280">Stop</span><strong style="color:#FF4560">{stop:,.0f} MAD (-{round(abs(close-stop)/close*100,1)}%)</strong></div>'
-            f'<div class="lr"><span style="color:#6B7280">R/R</span><strong style="color:#C9A84C">{rr}</strong></div>'
+            f'<div class="lr"><span style="color:#6B7280">Cible</span><strong style="color:#34D399">{tgt:,.0f} MAD (+{round((tgt-close)/close*100,1)}%)</strong></div>'
+            f'<div class="lr"><span style="color:#6B7280">Stop</span><strong style="color:#FF6B81">{stop:,.0f} MAD (-{round(abs(close-stop)/close*100,1)}%)</strong></div>'
+            f'<div class="lr"><span style="color:#6B7280">R/R</span><strong style="color:#D4B25A">{rr}</strong></div>'
             f'</div>'
             f'</div>'
         )
@@ -3443,14 +3445,14 @@ def render_conviction_call(best_buy, best_sell, groq_analysis):
     groq_html = (
         f'<div style="background:rgba(201,168,76,.06);border:1px solid rgba(201,168,76,.3);'
         f'border-radius:10px;padding:14px;margin-top:8px">'
-        f'<div style="font-size:9px;color:#C9A84C;letter-spacing:2px;margin-bottom:8px">ANALYSE BARAKA — THÈSE DU TRADE</div>'
+        f'<div style="font-size:9px;color:#D4B25A;letter-spacing:2px;margin-bottom:8px">ANALYSE BARAKA — THÈSE DU TRADE</div>'
         f'<div style="font-size:11px;color:#E8E4D6;line-height:1.9;white-space:pre-line">{groq_analysis}</div>'
         f'</div>'
     ) if groq_analysis else ""
 
     return (
         '<div class="sec" style="border-color:rgba(201,168,76,.5);background:linear-gradient(180deg,#080C14,#0A1018)">'
-        '<div class="st" style="color:#C9A84C;font-size:10px;letter-spacing:4px">⚡ CONVICTION CALL DU JOUR — MAXIMUM DE SIGNAUX ALIGNÉS</div>'
+        '<div class="st" style="color:#D4B25A;font-size:10px;letter-spacing:4px">⚡ CONVICTION CALL DU JOUR — MAXIMUM DE SIGNAUX ALIGNÉS</div>'
         '<div style="font-size:9px;color:#6B7280;margin-bottom:10px">'
         '10 facteurs indépendants: RSI · MACD · Volume · Gap · MASI · Élasticité · Secteur · Saisonnalité · Dividende · Matrice<br>'
         'Quand ≥6/10 s\'alignent sur UN titre → conviction maximale. Jamais une certitude — confirmer avec ton jugement.</div>'
@@ -3483,15 +3485,15 @@ def monitor_markets():
             prev = _MKT_PREV.get(name, chg)
             for th in thresholds:
                 if chg <= -th and prev > -th:
-                    alerts.append({"name":name,"chg":chg,"th":-th,"col":"#FF4560",
+                    alerts.append({"name":name,"chg":chg,"th":-th,"col":"#FF6B81",
                                    "msg":f"{name} {chg:.2f}% sous -{th}%","critical":th>=1})
                     break
                 elif chg >= th and prev < th:
-                    alerts.append({"name":name,"chg":chg,"th":th,"col":"#00C87A",
+                    alerts.append({"name":name,"chg":chg,"th":th,"col":"#34D399",
                                    "msg":f"{name} +{chg:.2f}% depasse +{th}%","critical":name=="Brent" and th>=2})
                     break
                 elif chg > -th*0.3 and prev <= -th:
-                    alerts.append({"name":name,"chg":chg,"th":0,"col":"#F59E0B",
+                    alerts.append({"name":name,"chg":chg,"th":0,"col":"#FBBF24",
                                    "msg":f"{name} rebond {chg:.2f}% (etait {prev:.2f}%)","critical":False})
                     break
             _MKT_PREV[name] = chg
@@ -3512,7 +3514,7 @@ def monitor_markets():
                 if mine_alerts:
                     m_subj, m_body = format_alert(mine_alerts)
                     m_html = (
-                        f'<!DOCTYPE html><html><head><meta charset="UTF-8">{CSS}</head>'
+                        f'<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="color-scheme" content="dark"><meta name="supported-color-schemes" content="dark">{CSS}</head>'
                         f'<body><div class="w">'
                         f'<div class="hdr" style="border-color:rgba(56,189,248,.5)">'
                         f'<div class="logo">BARAKA</div>'
@@ -3555,10 +3557,10 @@ def monitor_markets():
             go_p = macro.get("gold",{}).get("p",0)
             mad  = macro.get("usd_mad",10)
             has_crit = any(a["critical"] for a in alerts)
-            urg_col  = "#FF4560" if has_crit else "#F59E0B"
+            urg_col  = "#FF6B81" if has_crit else "#FBBF24"
 
             html = (
-                f'<!DOCTYPE html><html><head><meta charset="UTF-8">{CSS}</head><body><div class="w">'
+                f'<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="color-scheme" content="dark"><meta name="supported-color-schemes" content="dark">{CSS}</head><body><div class="w">'
                 f'<div class="hdr" style="border-color:{urg_col}60"><div class="logo">BARAKA</div>'
                 f'<div class="sub">ALERTE MARCHE — {datetime.datetime.now().strftime("%d/%m/%Y %H:%M")}</div>'
                 f'<span class="bdg" style="color:{urg_col};border-color:{urg_col}50">{"CRITIQUE" if has_crit else "SIGNAL"}</span></div>'
