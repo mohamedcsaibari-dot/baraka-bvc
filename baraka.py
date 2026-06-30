@@ -2159,6 +2159,13 @@ def brief_ouverture():
         _elast_brief = render_elasticity_block(None, macro)
         # ─────────────────────────────────────────────────────────────────────
 
+        # ── [v7.5] Modules brief — veille directeurs BC + dividendes proches ──
+        try:    cb_dirs_brief = get_cb_director_news()
+        except Exception as _e: print(f"[CB_DIRS] {_e}"); cb_dirs_brief = []
+        try:    div_al_brief, div_news_brief = get_dividend_alerts(window_days=3)
+        except Exception as _e: print(f"[DIV_BRIEF] {_e}"); div_al_brief, div_news_brief = [], []
+        # ─────────────────────────────────────────────────────────────────────
+
         if not deep_analysis:
             prompt=f"""BVC - Brief 07h30 - BVC ouvre dans 1h.
 Alertes: {crisis} | SP500 {sp_c:+.1f}% | CAC40 {cac_c:+.1f}% | Brent {brent_c:+.1f}% | Or {gold_c:+.1f}%
